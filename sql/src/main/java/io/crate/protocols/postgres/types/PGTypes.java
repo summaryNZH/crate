@@ -91,6 +91,7 @@ public class PGTypes {
             }
         }
         PG_TYPES_TO_CRATE_TYPE.put(0, DataTypes.UNDEFINED);
+        PG_TYPES_TO_CRATE_TYPE.put(25, DataTypes.STRING);
         TYPES = new HashSet<>(CRATE_TO_PG_TYPES.values()); // some pgTypes are used multiple times, de-dup them
     }
 
