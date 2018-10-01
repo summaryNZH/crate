@@ -22,15 +22,27 @@
 
 package io.crate.expression.tablefunctions;
 
-import io.crate.expression.AbstractFunctionModule;
-import io.crate.metadata.tablefunctions.TableFunctionImplementation;
+import org.junit.Test;
 
-public class TableFunctionModule extends AbstractFunctionModule<TableFunctionImplementation> {
+public class GenerateSeriesTest extends AbstractTableFunctionsTest {
 
-    @Override
-    public void configureFunctions() {
-        UnnestFunction.register(this);
-        EmptyRowTableFunction.register(this);
-        GenerateSeries.register(this);
+    @Test
+    public void testFrom3To4WithDefaultStep() {
+        assertExecute(
+            "generate_series(3, 4)",
+            "3\n" +
+            "4\n"
+        );
+    }
+
+    @Test
+    public void from2To8With2AsStep() {
+        assertExecute(
+            "generate_series(2, 8, 2)",
+            "2\n" +
+            "4\n" +
+            "6\n" +
+            "8\n"
+        );
     }
 }
