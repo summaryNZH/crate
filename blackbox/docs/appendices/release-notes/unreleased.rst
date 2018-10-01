@@ -40,6 +40,8 @@ Breaking Changes
 Changes
 =======
 
+- Added the ``generate_series(start, stop [, step ])`` table function.
+
 - Added support for using table functions in the select list of a query.
 
 - Implemented the ``array_upper`` and ``array_lower`` scalars that return the

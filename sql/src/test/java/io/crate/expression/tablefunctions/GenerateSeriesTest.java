@@ -45,4 +45,27 @@ public class GenerateSeriesTest extends AbstractTableFunctionsTest {
             "8\n"
         );
     }
+
+    @Test
+    public void testStartIsReturnedIfStepIsBiggerThanStop() {
+        assertExecute(
+            "generate_series(1, 4, 8)",
+            "1\n"
+        );
+    }
+
+    @Test
+    public void testEmptyOutputIfStartIsHigherThanStopWithDefaultStep() {
+        assertExecute("generate_series(10, 1)", "");
+    }
+
+    @Test
+    public void testNegativeStepsWorkIfStartIsHigherThanStop() {
+        assertExecute(
+            "generate_series(4, 1, -1)",
+            "4\n" +
+            "3\n" +
+            "2\n" +
+            "1\n");
+    }
 }

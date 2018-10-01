@@ -141,10 +141,11 @@ public final class GenerateSeries<T extends Number> extends TableFunctionImpleme
     @Override
     public Bucket evaluate(Input<T>... args) {
         T startInclusive = args[0].value();
-        T endInclusive = args[1].value();
+        T stopInclusive = args[1].value();
         T step = args.length == 3 ? args[2].value() : defaultStep;
-        T diff = minus.apply(plus.apply(endInclusive, step), startInclusive);
-        int numRows = (divide.apply(diff, step)).intValue();
+        T diff = minus.apply(plus.apply(stopInclusive, step), startInclusive);
+        final int numRows = Math.max(0, divide.apply(diff, step).intValue());
+        final boolean reverseCompare = comparator.compare(startInclusive, stopInclusive) > 0 && numRows > 0;
         final Object[] cells = new Object[1];
         cells[0] = startInclusive;
         final RowN rowN = new RowN(cells);
@@ -167,7 +168,12 @@ public final class GenerateSeries<T extends Number> extends TableFunctionImpleme
                             val = plus.apply(val, step);
                             doStep = false;
                         }
-                        return comparator.compare(val, endInclusive) <= 0;
+                        int compare = comparator.compare(val, stopInclusive);
+                        if (reverseCompare) {
+                            return compare >= 0;
+                        } else {
+                            return compare <= 0;
+                        }
                     }
 
                     @Override
