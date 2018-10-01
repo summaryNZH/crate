@@ -47,6 +47,11 @@ public class GenerateSeriesTest extends AbstractTableFunctionsTest {
     }
 
     @Test
+    public void testGenerateSeriesWithIntegerArguments() {
+        assertExecute("generate_series(1::int, 3::int)", "1\n2\n3\n");
+    }
+
+    @Test
     public void testStartIsReturnedIfStepIsBiggerThanStop() {
         assertExecute(
             "generate_series(1, 4, 8)",
