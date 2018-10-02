@@ -73,4 +73,16 @@ public class GenerateSeriesTest extends AbstractTableFunctionsTest {
             "2\n" +
             "1\n");
     }
+
+    @Test
+    public void testNegativeStartToPositiveEnd() {
+        assertExecute(
+            "generate_series(-2, 2, 1)",
+            "-2\n" +
+            "-1\n" +
+            "0\n" +
+            "1\n" +
+            "2\n"
+        );
+    }
 }
