@@ -50,12 +50,10 @@ import org.elasticsearch.cluster.ClusterState;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.function.BinaryOperator;
 
 /**
  * <pre>
@@ -70,50 +68,28 @@ import java.util.function.BinaryOperator;
  * }
  * </pre>
  */
-public final class GenerateSeries<T extends Number> extends TableFunctionImplementation<T> {
+public final class GenerateSeries extends TableFunctionImplementation<Long> {
 
     public static final String NAME = "generate_series";
     private static final RelationName RELATION_NAME = new RelationName("", NAME);
     private final FunctionInfo info;
-    private final T defaultStep;
-    private final BinaryOperator<T> minus;
-    private final BinaryOperator<T> plus;
-    private final BinaryOperator<T> divide;
-    private final Comparator<T> comparator;
 
     public static void register(TableFunctionModule module) {
-        Param longOrInt = Param.of(DataTypes.LONG, DataTypes.INTEGER);
         FuncParams.Builder paramsBuilder = FuncParams
-            .builder(longOrInt, longOrInt)
-            .withVarArgs(longOrInt)
+            .builder(Param.LONG, Param.LONG)
+            .withVarArgs(Param.LONG)
             .limitVarArgOccurrences(1);
         module.register(NAME, new BaseFunctionResolver(paramsBuilder.build()) {
             @Override
             public FunctionImplementation getForTypes(List<DataType> types) throws IllegalArgumentException {
-                DataType dataType = types.get(0);
-                if (dataType.equals(DataTypes.INTEGER)) {
-                    return new GenerateSeries<>(types, 1, (x, y) -> x - y, (x, y) -> x + y, (x, y) -> x / y, Integer::compare);
-                } else {
-                    return new GenerateSeries<>(types, 1L, (x, y) -> x - y, (x, y) -> x + y, (x, y) -> x / y, Long::compare);
-                }
+                return new GenerateSeries(types);
             }
         });
     }
 
-    private GenerateSeries(List<DataType> dataTypes,
-                           T defaultStep,
-                           BinaryOperator<T> minus,
-                           BinaryOperator<T> plus,
-                           BinaryOperator<T> divide,
-                           Comparator<T> comparator) {
-        this.defaultStep = defaultStep;
-        this.minus = minus;
-        this.plus = plus;
-        this.divide = divide;
-        this.comparator = comparator;
+    private GenerateSeries(List<DataType> dataTypes) {
         FunctionIdent functionIdent = new FunctionIdent(NAME, dataTypes);
-        DataType returnType = dataTypes.get(0);
-        this.info = new FunctionInfo(functionIdent, returnType, FunctionInfo.Type.TABLE);
+        this.info = new FunctionInfo(functionIdent, DataTypes.LONG, FunctionInfo.Type.TABLE);
     }
 
     @Override
@@ -139,13 +115,16 @@ public final class GenerateSeries<T extends Number> extends TableFunctionImpleme
     }
 
     @Override
-    public Bucket evaluate(Input<T>... args) {
-        T startInclusive = args[0].value();
-        T stopInclusive = args[1].value();
-        T step = args.length == 3 ? args[2].value() : defaultStep;
-        T diff = minus.apply(plus.apply(stopInclusive, step), startInclusive);
-        final int numRows = Math.max(0, divide.apply(diff, step).intValue());
-        final boolean reverseCompare = comparator.compare(startInclusive, stopInclusive) > 0 && numRows > 0;
+    public Bucket evaluate(Input<Long>... args) {
+        Long startInclusive = args[0].value();
+        Long stopInclusive = args[1].value();
+        Long step = args.length == 3 ? args[2].value() : 1L;
+        if (startInclusive == null || stopInclusive == null || step == null) {
+            return Bucket.EMPTY;
+        }
+        long diff = (stopInclusive + step) - startInclusive;
+        final int numRows = Math.max(0, (int) (diff / step));
+        final boolean reverseCompare = startInclusive > stopInclusive && numRows > 0;
         final Object[] cells = new Object[1];
         cells[0] = startInclusive;
         final RowN rowN = new RowN(cells);
@@ -160,19 +139,18 @@ public final class GenerateSeries<T extends Number> extends TableFunctionImpleme
             public Iterator<Row> iterator() {
                 return new Iterator<Row>() {
                     boolean doStep = false;
-                    T val = startInclusive;
+                    long val = startInclusive;
 
                     @Override
                     public boolean hasNext() {
                         if (doStep) {
-                            val = plus.apply(val, step);
+                            val = val + step;
                             doStep = false;
                         }
-                        int compare = comparator.compare(val, stopInclusive);
                         if (reverseCompare) {
-                            return compare >= 0;
+                            return val >= stopInclusive;
                         } else {
-                            return compare <= 0;
+                            return val <= stopInclusive;
                         }
                     }
 
