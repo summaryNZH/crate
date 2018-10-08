@@ -31,7 +31,7 @@ import io.crate.types.DataTypes;
 
 import java.util.List;
 
-class ArrayUpperFunction extends Scalar<Integer, Object[]> {
+public class ArrayUpperFunction extends Scalar<Integer, Object[]> {
 
     public static final String ARRAY_UPPER = "array_upper";
     public static final String ARRAY_LENGTH = "array_length";
