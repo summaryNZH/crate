@@ -188,6 +188,9 @@ public final class ArrayLengthQuery implements InnerFunctionToQuery {
                                                  LuceneQueryBuilder.Context context,
                                                  Reference arrayRef,
                                                  IntPredicate valueCountIsMatch) {
+        if (true) {
+            return genericFunctionFilter(parent, context);
+        }
         return new BooleanQuery.Builder()
             .add(
                 numTermsPerDocQuery(arrayRef, valueCountIsMatch),
