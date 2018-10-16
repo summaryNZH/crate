@@ -197,8 +197,7 @@ public class TransportShardUpsertAction extends TransportShardAction<ShardUpsert
                 VersionType.EXTERNAL,
                 -1,
                 false,
-                sourceToParse,
-                getMappingUpdateConsumer(request)
+                sourceToParse
             );
             location = indexResult.getTranslogLocation();
         }
@@ -295,8 +294,7 @@ public class TransportShardUpsertAction extends TransportShardAction<ShardUpsert
             VersionType.INTERNAL,
             sourceToParse,
             -1,
-            isRetry,
-            getMappingUpdateConsumer(request)
+            isRetry
         );
 
         Exception failure = indexResult.getFailure();

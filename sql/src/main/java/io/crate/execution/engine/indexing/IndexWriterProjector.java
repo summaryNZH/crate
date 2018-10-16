@@ -166,8 +166,8 @@ public class IndexWriterProjector implements Projector {
             }
             Map<String, Object> filteredMap = XContentMapValues.filter(value, includes, excludes);
             try {
-                BytesReference bytes = new XContentBuilder(XContentType.JSON.xContent(),
-                    new BytesStreamOutput(lastSourceSize)).map(filteredMap).bytes();
+                BytesReference bytes = BytesReference.bytes(new XContentBuilder(XContentType.JSON.xContent(),
+                    new BytesStreamOutput(lastSourceSize)).map(filteredMap));
                 lastSourceSize = bytes.length();
                 return bytes.toBytesRef();
             } catch (IOException ex) {

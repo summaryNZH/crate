@@ -23,6 +23,7 @@
 package io.crate.expression.reference;
 
 import org.apache.lucene.util.BytesRef;
+import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.get.GetResult;
 
@@ -96,7 +97,7 @@ public final class Doc {
             updatedSource,
             () -> {
                 try {
-                    return XContentFactory.jsonBuilder().map(updatedSource).bytes().toBytesRef();
+                    return BytesReference.bytes(XContentFactory.jsonBuilder().map(updatedSource)).toBytesRef();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

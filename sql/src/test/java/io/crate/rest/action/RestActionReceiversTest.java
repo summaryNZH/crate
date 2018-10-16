@@ -35,6 +35,7 @@ import io.crate.test.integration.CrateUnitTest;
 import io.crate.testing.DummyRelation;
 import io.crate.types.DataTypes;
 import org.apache.lucene.util.BytesRef;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.breaker.NoopCircuitBreaker;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
@@ -60,8 +61,8 @@ public class RestActionReceiversTest extends CrateUnitTest {
 
     private static void assertXContentBuilder(XContentBuilder expected, XContentBuilder actual) throws IOException {
         assertEquals(
-            stripDuration(expected.string()),
-            stripDuration(actual.string())
+            stripDuration(Strings.toString(expected)),
+            stripDuration(Strings.toString(actual))
         );
     }
 
@@ -122,7 +123,7 @@ public class RestActionReceiversTest extends CrateUnitTest {
         };
         ResultToXContentBuilder builder = ResultToXContentBuilder.builder(JsonXContent.contentBuilder())
             .bulkRows(results);
-        String s = builder.build().string();
+        String s = Strings.toString(builder.build());
         assertEquals(s, "{\"results\":[{\"rowcount\":1},{\"rowcount\":2},{\"rowcount\":3}]}");
     }
 }

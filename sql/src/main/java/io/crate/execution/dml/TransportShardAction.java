@@ -39,7 +39,6 @@ import org.elasticsearch.cluster.metadata.IndexNameExpressionResolver;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.mapper.Mapper;
-import org.elasticsearch.index.mapper.Mapping;
 import org.elasticsearch.index.shard.IndexShard;
 import org.elasticsearch.indices.IndicesService;
 import org.elasticsearch.threadpool.ThreadPool;
@@ -50,9 +49,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -79,7 +76,7 @@ public abstract class TransportShardAction<Request extends ShardRequest<Request,
                                    Supplier<Request> requestSupplier,
                                    SchemaUpdateClient schemaUpdateClient) {
         super(settings, actionName, transportService, clusterService, indicesService, threadPool, shardStateAction,
-            actionFilters, indexNameExpressionResolver, requestSupplier, requestSupplier,ThreadPool.Names.BULK);
+            actionFilters, indexNameExpressionResolver, requestSupplier, requestSupplier,ThreadPool.Names.WRITE);
 
         this.schemaUpdateClient = schemaUpdateClient;
     }
@@ -168,17 +165,6 @@ public abstract class TransportShardAction<Request extends ShardRequest<Request,
         public void kill(@Nullable Throwable t) {
             killed.getAndSet(true);
         }
-    }
-
-    protected Consumer<Mapping> getMappingUpdateConsumer(Request request) {
-        return updatedMapping -> {
-            validateMapping(updatedMapping.root().iterator(), false);
-            try {
-                schemaUpdateClient.blockingUpdateOnMaster(request.shardId().getIndex(), updatedMapping);
-            } catch (TimeoutException e) {
-                throw new RuntimeException("Couldn't update mapping on master", e);
-            }
-        };
     }
 
     @VisibleForTesting
