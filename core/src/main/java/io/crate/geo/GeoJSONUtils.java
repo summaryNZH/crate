@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import io.crate.core.collections.ForEach;
 import io.crate.types.GeoPointType;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.geo.parsers.ShapeParser;
 import org.elasticsearch.common.lucene.BytesRefs;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
@@ -131,7 +132,7 @@ public class GeoJSONUtils {
      */
     public static Shape map2Shape(Map<String, Object> geoJSONMap) {
         try {
-            return geoJSONString2Shape(XContentFactory.jsonBuilder().map(geoJSONMap).toString());
+            return geoJSONString2Shape(Strings.toString(XContentFactory.jsonBuilder().map(geoJSONMap)));
         } catch (Throwable e) {
             throw new IllegalArgumentException(String.format(Locale.ENGLISH,
                 "Cannot convert Map \"%s\" to shape", geoJSONMap), e);
