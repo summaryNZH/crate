@@ -22,6 +22,7 @@
 
 package io.crate.license;
 
+import org.elasticsearch.common.inject.internal.Nullable;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -31,18 +32,28 @@ import org.elasticsearch.common.xcontent.XContentType;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.Optional;
 
 public class DecryptedLicenseData {
 
     public static final String EXPIRATION_DATE_IN_MS = "expirationDateInMs";
     public static final String ISSUED_TO = "issuedTo";
+    private static final String SIGNATURE = "signature";
 
     private final long expirationDateInMs;
     private final String issuedTo;
+    private Optional<String> signature;
 
     DecryptedLicenseData(long expirationDateInMs, String issuedTo) {
         this.expirationDateInMs = expirationDateInMs;
         this.issuedTo = issuedTo;
+        this.signature = Optional.empty();
+    }
+
+    DecryptedLicenseData(long expirationDateInMs, String issuedTo, @Nullable String signature) {
+        this.expirationDateInMs = expirationDateInMs;
+        this.issuedTo = issuedTo;
+        this.signature = Optional.ofNullable(signature);
     }
 
     public long expirationDateInMs() {
@@ -53,23 +64,68 @@ public class DecryptedLicenseData {
         return issuedTo;
     }
 
+    String signature() {
+        return (signature.isPresent() ? signature.get() : "");
+    }
+
+    void setSignature(String signature) {
+        this.signature = Optional.ofNullable(signature);
+    }
+
+    boolean isExpired() {
+        return expirationDateInMs < System.currentTimeMillis();
+    }
+
     /*
      * Creates the json representation of the license information with the following structure:
      *
      * <pre>
      *      {
      *          "expirationDateInMs": "XXX",
-     *          "issuedTo": "YYY"
+     *          "issuedTo": "YYY",
+     *          "signature": "ZZZ"
+     *      }
+     * </pre>
+     *
+     * If no signature is set (eg. for Self Generated Licenses), the signature part is omitted e.g.
+     * <pre>
+     *      {
+     *          "expirationDateInMs": "XXX",
+     *          "issuedTo": "YYY",
      *      }
      * </pre>
      */
     byte[] formatLicenseData() {
+        // by default include signature if already set
+        return formatLicenseData(signature.isPresent());
+    }
+
+    /*
+     * Creates the json representation of the license information for signature generation.
+     * This is always have the following structure:
+     *
+     * <pre>
+     *      {
+     *          "expirationDateInMs": "XXX",
+     *          "issuedTo": "YYY",
+     *      }
+     * </pre>
+     */
+    byte[] formatLicenseDataForSignature() {
+        // never include signature
+        return formatLicenseData(false);
+    }
+
+    private byte[] formatLicenseData(boolean includeSignature) {
         try {
             XContentBuilder contentBuilder = XContentFactory.contentBuilder(XContentType.JSON);
             contentBuilder.startObject()
                 .field(EXPIRATION_DATE_IN_MS, expirationDateInMs)
-                .field(ISSUED_TO, issuedTo)
-                .endObject();
+                .field(ISSUED_TO, issuedTo);
+            if (includeSignature) {
+                contentBuilder.field(SIGNATURE, signature);
+            }
+            contentBuilder.endObject();
             return contentBuilder.string().getBytes(StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new IllegalStateException(e);
@@ -82,6 +138,7 @@ public class DecryptedLicenseData {
             XContentParser.Token token;
             long expirationDate = 0;
             String issuedTo = null;
+            String signature = null;
             while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
                 if (token == XContentParser.Token.FIELD_NAME) {
                     String currentFieldName = parser.currentName();
@@ -90,10 +147,12 @@ public class DecryptedLicenseData {
                         expirationDate = parser.longValue();
                     } else if (currentFieldName.equals(ISSUED_TO)) {
                         issuedTo = parser.text();
+                    } else if (currentFieldName.equals(SIGNATURE)) {
+                        signature = parser.text();
                     }
                 }
             }
-            return new DecryptedLicenseData(expirationDate, issuedTo);
+            return new DecryptedLicenseData(expirationDate, issuedTo, signature);
         }
     }
 
@@ -103,11 +162,12 @@ public class DecryptedLicenseData {
         if (o == null || getClass() != o.getClass()) return false;
         DecryptedLicenseData that = (DecryptedLicenseData) o;
         return expirationDateInMs == that.expirationDateInMs &&
-               Objects.equals(issuedTo, that.issuedTo);
+               Objects.equals(issuedTo, that.issuedTo) &&
+               signature().equals(that.signature());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expirationDateInMs, issuedTo);
+        return Objects.hash(expirationDateInMs, issuedTo, signature());
     }
 }

@@ -25,14 +25,18 @@ package io.crate.license;
 import io.crate.license.exception.InvalidLicenseException;
 import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
 import org.elasticsearch.common.settings.Settings;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static io.crate.license.LicenseKey.LicenseType;
 
 import java.io.IOException;
 
 import static io.crate.license.LicenseKey.VERSION;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
 
@@ -46,14 +50,14 @@ public class LicenseServiceTest extends CrateDummyClusterServiceUnitTest {
     }
 
     @Test
-    public void testVerifyValidLicense() {
+    public void testVerifyValidSelfGeneratedLicense() {
         LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.SELF_GENERATED, VERSION,
             new DecryptedLicenseData(Long.MAX_VALUE, "test"));
         assertThat(licenseService.verifyLicense(licenseKey), is(true));
     }
 
     @Test
-    public void testVerifyExpiredLicense() {
+    public void testVerifyExpiredSelfGeneratedLicense() {
         LicenseKey expiredLicense = licenseService.createLicenseKey(LicenseType.SELF_GENERATED, VERSION,
             new DecryptedLicenseData(System.currentTimeMillis() - 5 * 60 * 60 * 1000, "test"));
 
@@ -96,4 +100,22 @@ public class LicenseServiceTest extends CrateDummyClusterServiceUnitTest {
         licenseService.createLicenseKey(LicenseType.ENTERPRISE, VERSION, new DecryptedLicenseData(Long.MAX_VALUE, "test"));
         //licenseService.createLicenseKey(-2, VERSION, new DecryptedLicenseData(Long.MAX_VALUE, "test"));
     }
+
+
+    @Test
+    public void testGenerateSelfGeneratedKey() {
+        byte[] encryptedContent = LicenseService.encryptLicenseContent(new DecryptedLicenseData(Long.MAX_VALUE, "test").formatLicenseData());
+        assertThat(encryptedContent, Matchers.is(notNullValue()));
+    }
+
+    @Test
+    public void testDecryptSelfGeneratedLicense() throws IOException {
+        byte[] encryptedContent = LicenseService.encryptLicenseContent(new DecryptedLicenseData(Long.MAX_VALUE, "test").formatLicenseData());
+        DecryptedLicenseData licenseInfo = LicenseService.decryptLicenseContent(encryptedContent);
+
+        assertThat(licenseInfo.expirationDateInMs(), Matchers.is(Long.MAX_VALUE));
+        assertThat(licenseInfo.issuedTo(), Matchers.is("test"));
+    }
+
+
 }
