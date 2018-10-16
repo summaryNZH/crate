@@ -39,7 +39,7 @@ import org.elasticsearch.gateway.GatewayService;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static io.crate.license.LicenseKey.SELF_GENERATED;
+import static io.crate.license.LicenseKey.LicenseType;
 import static io.crate.license.LicenseKey.decodeLicense;
 import static io.crate.license.SelfGeneratedLicense.decryptLicenseContent;
 
@@ -71,9 +71,9 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
     /**
      * Encrypts the provided license data and creates a #{@link LicenseKey}
      */
-    LicenseKey createLicenseKey(int licenseType, int version, DecryptedLicenseData decryptedLicenseData) {
+    LicenseKey createLicenseKey(LicenseType licenseType, int version, DecryptedLicenseData decryptedLicenseData) {
         byte[] encryptedContent;
-        if (licenseType == SELF_GENERATED) {
+        if (licenseType == LicenseType.SELF_GENERATED) {
             encryptedContent = SelfGeneratedLicense.encryptLicenseContent(decryptedLicenseData.formatLicenseData());
         } else {
             throw new UnsupportedOperationException("Only self generated licenses are supported.");
@@ -99,6 +99,21 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
         }
     }
 
+    /*
+        boolean verifyLicense(LicenseKey licenseKey) {
+        try {
+            DecodedLicense decodedLicense = decodeLicense(licenseKey);
+            if (decodedLicense.type() == LicenseType.SELF_GENERATED) {
+                DecryptedLicenseData licenseInfo = decryptLicenseContent(decodedLicense.encryptedContent());
+                return System.currentTimeMillis() < licenseInfo.expirationDateInMs();
+            }
+            return false;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+     */
+
     @Nullable
     public DecryptedLicenseData currentLicense() {
         return currentLicense.get();
@@ -119,7 +134,7 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
             if (nodes.isLocalNodeElectedMaster()) {
                 DecryptedLicenseData licenseData = new DecryptedLicenseData(Long.MAX_VALUE, clusterState.getClusterName().value());
                 LicenseKey licenseKey = createLicenseKey(
-                    LicenseKey.SELF_GENERATED,
+                    LicenseType.SELF_GENERATED,
                     LicenseKey.VERSION,
                     licenseData
                 );

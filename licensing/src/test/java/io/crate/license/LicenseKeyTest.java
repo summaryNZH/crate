@@ -26,10 +26,12 @@ import io.crate.license.exception.InvalidLicenseException;
 import io.crate.test.integration.CrateUnitTest;
 import org.junit.Test;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.stream.IntStream;
 
+import static io.crate.license.LicenseKey.LicenseType;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -39,7 +41,7 @@ public class LicenseKeyTest extends CrateUnitTest {
     public void createLicenseKey() {
         LicenseKey licenseKey =
             LicenseKey.createLicenseKey(
-                LicenseKey.SELF_GENERATED,
+                LicenseType.SELF_GENERATED,
                 LicenseKey.VERSION,
                 "testLicense".getBytes(StandardCharsets.UTF_8));
         assertThat(licenseKey, is(notNullValue()));
@@ -51,7 +53,7 @@ public class LicenseKeyTest extends CrateUnitTest {
             LicenseKey.decodeLicense(new LicenseKey("AAAAAAAAAAEAAABACYK5Ua3JBI98IJ99P/AsXCsV7UpHiBzSjkg+pFNDkpYAZUttlnqldjF5BAtRfzuJHA+2091XDmHACmF+M1J0NQ=="));
 
         assertThat(decodedLicense, is(notNullValue()));
-        assertThat(decodedLicense.type(), is(LicenseKey.SELF_GENERATED));
+        assertThat(decodedLicense.type(), is(LicenseType.SELF_GENERATED));
         assertThat(decodedLicense.version(), is(1));
     }
 
@@ -60,8 +62,12 @@ public class LicenseKeyTest extends CrateUnitTest {
         byte[] largeContent = new byte[257];
         IntStream.range(0, 257).forEach(i -> largeContent[i] = 15);
 
+        // adjust first bytes to match a valid license type
+        ByteBuffer largeContentBuffer = ByteBuffer.wrap(largeContent);
+        largeContentBuffer.putInt(LicenseType.SELF_GENERATED.value());
+
         expectedException.expect(InvalidLicenseException.class);
         expectedException.expectMessage("The provided license key exceeds the maximum length of 256");
-        LicenseKey.decodeLicense(new LicenseKey(new String(Base64.getEncoder().encode(largeContent))));
+        LicenseKey.decodeLicense(new LicenseKey(new String(Base64.getEncoder().encode(largeContentBuffer.array()))));
     }
 }
