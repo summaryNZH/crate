@@ -24,8 +24,16 @@ package io.crate.license;
 
 import io.crate.license.exception.InvalidLicenseException;
 import io.crate.test.integration.CrateUnitTest;
+import org.elasticsearch.common.io.stream.BytesStreamOutput;
+import org.elasticsearch.common.io.stream.StreamInput;
+import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -34,11 +42,66 @@ import java.util.stream.IntStream;
 import static io.crate.license.LicenseKey.LicenseType;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 public class LicenseKeyTest extends CrateUnitTest {
 
+    private static final String LICENSE_KEY = "AAAAAAAAAAEAAABACYK5Ua3JBI98IJ99P/AsXCsV7UpHiBzSjkg+pFNDkpYAZUttlnqldjF5BAtRfzuJHA+2091XDmHACmF+M1J0NQ==";
+
+    public static LicenseKey createLicenseKey() {
+        return new LicenseKey(LICENSE_KEY);
+    }
+
     @Test
-    public void createLicenseKey() {
+    public void testLicenseMetaDataStreaming() throws IOException {
+        BytesStreamOutput stream = new BytesStreamOutput();
+        LicenseKey licenseKey = createLicenseKey();
+        licenseKey.writeTo(stream);
+
+        StreamInput in = stream.bytes().streamInput();
+        LicenseKey licenseKey2 = new LicenseKey(in);
+        assertEquals(licenseKey, licenseKey2);
+    }
+
+    @Test
+    public void testLicenceMetaDataToXContent() throws IOException {
+        LicenseKey licenseKey = createLicenseKey();
+        XContentBuilder builder = XContentFactory.jsonBuilder();
+
+        // reflects the logic used to process custom metadata in the cluster state
+        builder.startObject();
+        licenseKey.toXContent(builder, ToXContent.EMPTY_PARAMS);
+        builder.endObject();
+
+        XContentParser parser = JsonXContent.jsonXContent.createParser(xContentRegistry(), builder.bytes());
+        parser.nextToken(); // start object
+        LicenseKey licenseKey2 = LicenseKey.fromXContent(parser);
+        assertEquals(licenseKey, licenseKey2);
+        // a metadata custom must consume the surrounded END_OBJECT token, no token must be left
+        assertThat(parser.nextToken(), nullValue());
+    }
+
+    @Test
+    public void testLicenceMetaDataFromXContent() throws IOException {
+        XContentBuilder builder = XContentFactory.jsonBuilder();
+
+        // reflects the logic used to process custom metadata in the cluster state
+        builder.startObject();
+        builder.startObject(LicenseKey.WRITEABLE_TYPE)
+            .field("license_key", LICENSE_KEY)
+            .endObject();
+        builder.endObject();
+
+        XContentParser parser = JsonXContent.jsonXContent.createParser(xContentRegistry(), builder.bytes());
+        parser.nextToken(); // start object
+        LicenseKey licenseKey2 = LicenseKey.fromXContent(parser);
+        assertEquals(createLicenseKey(), licenseKey2);
+        // a metadata custom must consume the surrounded END_OBJECT token, no token must be left
+        assertThat(parser.nextToken(), nullValue());
+    }
+
+    @Test
+    public void testCreateLicenseKey() {
         LicenseKey licenseKey =
             LicenseKey.createLicenseKey(
                 LicenseType.SELF_GENERATED,
@@ -48,9 +111,8 @@ public class LicenseKeyTest extends CrateUnitTest {
     }
 
     @Test
-    public void decodeLicense() {
-        DecodedLicense decodedLicense =
-            LicenseKey.decodeLicense(new LicenseKey("AAAAAAAAAAEAAABACYK5Ua3JBI98IJ99P/AsXCsV7UpHiBzSjkg+pFNDkpYAZUttlnqldjF5BAtRfzuJHA+2091XDmHACmF+M1J0NQ=="));
+    public void testDecodeLicense() {
+        DecodedLicense decodedLicense = LicenseKey.decodeLicense(createLicenseKey());
 
         assertThat(decodedLicense, is(notNullValue()));
         assertThat(decodedLicense.type(), is(LicenseType.SELF_GENERATED));
@@ -58,7 +120,7 @@ public class LicenseKeyTest extends CrateUnitTest {
     }
 
     @Test
-    public void decodeTooLongLicenseRaisesException() {
+    public void testDecodeTooLongLicenseRaisesException() {
         byte[] largeContent = new byte[LicenseKey.MAX_LICENSE_CONTENT_LENGTH + 1];
         IntStream.range(0, LicenseKey.MAX_LICENSE_CONTENT_LENGTH + 1).forEach(i -> largeContent[i] = 15);
 

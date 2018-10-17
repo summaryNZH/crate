@@ -36,8 +36,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class LicenseKey extends AbstractNamedDiffable<MetaData.Custom> implements MetaData.Custom {
@@ -48,25 +46,21 @@ public class LicenseKey extends AbstractNamedDiffable<MetaData.Custom> implement
         SELF_GENERATED(0),
         ENTERPRISE(1);
 
-        static Map<Integer, LicenseType> types = new HashMap<>();
-
-        static {
-            types.put(SELF_GENERATED.value, SELF_GENERATED);
-            types.put(ENTERPRISE.value, ENTERPRISE);
-        }
-
         private int value;
 
         LicenseType(int value) {
             this.value = value;
         }
 
-        static LicenseType of(Integer value) {
-            LicenseType type = types.get(value);
-            if (type == null) {
-                throw new InvalidLicenseException("Invalid License Type");
+        static LicenseType of(int value) {
+            switch (value) {
+                case 0:
+                    return LicenseType.SELF_GENERATED;
+                case 1:
+                    return LicenseType.ENTERPRISE;
+                default:
             }
-            return type;
+            throw new InvalidLicenseException("Invalid License Type of value: " + value);
         }
 
         int value() {

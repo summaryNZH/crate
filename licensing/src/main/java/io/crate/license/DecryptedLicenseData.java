@@ -32,7 +32,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-import java.util.Optional;
 
 public class DecryptedLicenseData {
 
@@ -42,18 +41,18 @@ public class DecryptedLicenseData {
 
     private final long expirationDateInMs;
     private final String issuedTo;
-    private Optional<String> signature;
+    @Nullable
+    private String signature;
 
     DecryptedLicenseData(long expirationDateInMs, String issuedTo) {
         this.expirationDateInMs = expirationDateInMs;
         this.issuedTo = issuedTo;
-        this.signature = Optional.empty();
     }
 
     DecryptedLicenseData(long expirationDateInMs, String issuedTo, @Nullable String signature) {
         this.expirationDateInMs = expirationDateInMs;
         this.issuedTo = issuedTo;
-        this.signature = Optional.ofNullable(signature);
+        this.signature = signature;
     }
 
     public long expirationDateInMs() {
@@ -65,11 +64,11 @@ public class DecryptedLicenseData {
     }
 
     String signature() {
-        return (signature.isPresent() ? signature.get() : "");
+        return signature != null ? signature : "";
     }
 
     void setSignature(String signature) {
-        this.signature = Optional.ofNullable(signature);
+        this.signature = signature;
     }
 
     boolean isExpired() {
@@ -97,7 +96,7 @@ public class DecryptedLicenseData {
      */
     byte[] formatLicenseData() {
         // by default include signature if already set
-        return formatLicenseData(signature.isPresent());
+        return formatLicenseData(signature != null);
     }
 
     /*

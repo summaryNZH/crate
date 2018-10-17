@@ -85,38 +85,10 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
         return LicenseKey.createLicenseKey(licenseType, version, encryptedContent);
     }
 
-    boolean verifyLicense(LicenseKey licenseKey) {
-        try {
-            DecodedLicense decodedLicense = decodeLicense(licenseKey);
-            DecryptedLicenseData licenseData = licenseData(decodedLicense);
-            return System.currentTimeMillis() < licenseData.expirationDateInMs();
-        } catch (IOException e) {
-            return false;
-        }
+    static DecryptedLicenseData licenseData(DecodedLicense decodedLicense) throws IOException {
+        return decryptLicenseContent(decodedLicense.encryptedContent());
     }
 
-    DecryptedLicenseData licenseData(DecodedLicense decodedLicense) throws IOException {
-        if (decodedLicense.type() == LicenseType.SELF_GENERATED) {
-            return decryptLicenseContent(decodedLicense.encryptedContent());
-        } else {
-            throw new UnsupportedOperationException("Only self generated licenses are supported.");
-        }
-    }
-
-    /*
-        boolean verifyLicense(LicenseKey licenseKey) {
-        try {
-            DecodedLicense decodedLicense = decodeLicense(licenseKey);
-            if (decodedLicense.type() == LicenseType.SELF_GENERATED) {
-                DecryptedLicenseData licenseInfo = decryptLicenseContent(decodedLicense.encryptedContent());
-                return System.currentTimeMillis() < licenseInfo.expirationDateInMs();
-            }
-            return false;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-     */
 
     @Nullable
     public DecryptedLicenseData currentLicense() {
@@ -163,17 +135,16 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
     }
 
     @VisibleForTesting
-    boolean verifyLicense(LicenseKey licenseKey) {
+    static boolean verifyLicense(LicenseKey licenseKey) {
         try {
             DecodedLicense decodedLicense = decodeLicense(licenseKey);
-            DecryptedLicenseData licenseInfo = decryptLicenseContent(decodedLicense.encryptedContent());
+            DecryptedLicenseData licenseData = licenseData(decodedLicense);
 
-            if (licenseInfo.isExpired()) {
-                //LOGGER.warn("Unable to validate [{}] as it is expired", license);
+            if (licenseData.isExpired()) {
                 return false;
             }
             if (decodedLicense.type() == LicenseType.ENTERPRISE) {
-                return verifySignature(licenseInfo);
+                return verifySignature(licenseData);
             }
             return true;
         } catch (IOException e) {
@@ -193,7 +164,7 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
         return Cryptos.encrypt(content);
     }
 
-    private boolean verifySignature(final DecryptedLicenseData license) {
+    private static boolean verifySignature(final DecryptedLicenseData license) {
         final byte[] publicKeyBytes;
         try (InputStream is = LicenseService.class.getResourceAsStream("/public.key")) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -211,7 +182,7 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
             Signature rsa = Cryptos.rsaSignatureInstance();
             rsa.initVerify(Cryptos.getPublicKey(publicKeyBytes));
             // feed signature data
-            byte[] data = Cryptos.digest(licenseData.formatLicenseDataForSignature());
+            byte[] data = Cryptos.sha256Digest(licenseData.formatLicenseDataForSignature());
             rsa.update(data);
             // verify signature
             byte[] signatureToVerify = Base64.getDecoder().decode(licenseData.signature());
@@ -226,9 +197,9 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
         try {
             // init signature with private key
             Signature rsa = Cryptos.rsaSignatureInstance();
-            rsa.initSign(Cryptos.decryptPrivateKey(encryptedPrivateKeyBytes));
+            rsa.initSign(Cryptos.getPrivateKey(encryptedPrivateKeyBytes));
             // feed signature data
-            byte[] data = Cryptos.digest(licenseData.formatLicenseDataForSignature());
+            byte[] data = Cryptos.sha256Digest(licenseData.formatLicenseDataForSignature());
             rsa.update(data);
             // sign
             byte[] signedContent = rsa.sign();

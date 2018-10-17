@@ -27,22 +27,14 @@ import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
 import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.settings.Settings;
 import org.hamcrest.Matchers;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static io.crate.license.LicenseKey.LicenseType;
-
-import java.io.IOException;
-
 import static io.crate.license.LicenseKey.VERSION;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
@@ -50,129 +42,26 @@ import static org.mockito.Mockito.mock;
 
 public class LicenseServiceTest extends CrateDummyClusterServiceUnitTest {
 
-    private static Path publicKeyPath;
-    private static Path privateKeyPath;
-
     private LicenseService licenseService;
 
-    private static DecryptedLicenseData signLicenseForTesting(DecryptedLicenseData licenseData) {
-        final byte[] encryptedPrivateKeyBytes;
-        try (InputStream is = LicenseServiceTest.class.getResourceAsStream("/private.key")) {
+    private static byte[] getKeyFromResource(String uri) {
+        try (InputStream is = LicenseServiceTest.class.getResourceAsStream(uri)) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             Streams.copy(is, out);
-            encryptedPrivateKeyBytes = out.toByteArray();
+            return out.toByteArray();
         } catch (IOException ex) {
             throw new IllegalStateException(ex);
         }
-        return LicenseService.signLicense(licenseData, encryptedPrivateKeyBytes);
     }
 
-    @BeforeClass
-    private static void setup() {
-        // hacky all the way and works only in IDEA
-        // todo: change
-        publicKeyPath = Paths.get("licensing/build-idea/classes/main", "/public.key");
-        privateKeyPath = Paths.get("licensing/build-idea/classes/test","/private.key");
-        Cryptos.generateAndWriteAsymmetricKeysToFiles(publicKeyPath, privateKeyPath);
-    }
-
-    @AfterClass
-    private static void teardown() throws IOException {
-        Files.deleteIfExists(publicKeyPath);
-        Files.deleteIfExists(privateKeyPath);
+    private static DecryptedLicenseData signLicenseForTesting(DecryptedLicenseData licenseData) {
+        return LicenseService.signLicense(licenseData, getKeyFromResource("/private.key"));
     }
 
     @Before
     public void setupLicenseService() {
         licenseService = new LicenseService(Settings.EMPTY, mock(TransportSetLicenseAction.class), clusterService);
     }
-
-    @Test
-    public void testVerifyValidSelfGeneratedLicense() {
-        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.SELF_GENERATED, VERSION,
-            new DecryptedLicenseData(Long.MAX_VALUE, "test"));
-        assertThat(licenseService.verifyLicense(licenseKey), is(true));
-    }
-
-    @Test
-    public void testVerifyExpiredSelfGeneratedLicense() {
-        LicenseKey expiredLicense = licenseService.createLicenseKey(LicenseType.SELF_GENERATED, VERSION,
-            new DecryptedLicenseData(System.currentTimeMillis() - 5 * 60 * 60 * 1000, "test"));
-
-        assertThat(licenseService.verifyLicense(expiredLicense), is(false));
-    }
-
-    @Test
-    public void testVerifyValidEnterpriseLicense() {
-        DecryptedLicenseData licenseData = new DecryptedLicenseData(Long.MAX_VALUE, "test");
-        licenseData = signLicenseForTesting(licenseData);
-
-        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.ENTERPRISE, LicenseKey.VERSION, licenseData);
-        assertThat(licenseService.verifyLicense(licenseKey), is(true));
-    }
-
-    @Test
-    public void testVerifyTamperedEnterpriseLicense() {
-        DecryptedLicenseData originalLicenseData = new DecryptedLicenseData(Long.MAX_VALUE, "test");
-        originalLicenseData = signLicenseForTesting(originalLicenseData);
-
-        // someone tries to change expiration_date: MAX_VALUE -> MIN_VALUE
-        DecryptedLicenseData tamperedLicenseData = new DecryptedLicenseData(Long.MIN_VALUE, "test");
-        tamperedLicenseData.setSignature(originalLicenseData.signature());
-
-        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.ENTERPRISE, LicenseKey.VERSION, tamperedLicenseData);
-        assertThat(licenseService.verifyLicense(licenseKey), is(false));
-    }
-
-    @Test
-    public void testVerifyExpiredEnterpriseLicense() {
-        DecryptedLicenseData expiredLicenseData = new DecryptedLicenseData(
-            System.currentTimeMillis() - 5 * 60 * 60 * 1000, "test");
-        expiredLicenseData = signLicenseForTesting(expiredLicenseData);
-
-        LicenseKey expiredLicense = licenseService.createLicenseKey(LicenseType.ENTERPRISE,
-            LicenseKey.VERSION, expiredLicenseData);
-
-        assertThat(licenseService.verifyLicense(expiredLicense), is(false));
-    }
-
-    @Test
-    public void testInvalidLicenseTypeThrowsException() {
-        expectedException.expect(InvalidLicenseException.class);
-        expectedException.expectMessage("Invalid License Type");
-
-        licenseService.createLicenseKey(LicenseType.of(-2), VERSION, new DecryptedLicenseData(Long.MAX_VALUE, "test"));
-    }
-
-    @Test
-    public void testGetLicenseData() throws IOException {
-        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.SELF_GENERATED, VERSION,
-            new DecryptedLicenseData(Long.MAX_VALUE, "test"));
-        DecryptedLicenseData licenseData = licenseService.licenseData(LicenseKey.decodeLicense(licenseKey));
-
-        assertThat(licenseData.expirationDateInMs(), is(Long.MAX_VALUE));
-        assertThat(licenseData.issuedTo(), is("test"));
-    }
-
-    @Test
-    public void testGetLicenseDataOnlySupportsSelfGeneratedLicense() throws IOException {
-        //DecodedLicense decodedLicense = new DecodedLicense(-2, VERSION, new byte[]{1,2,3,4});
-        DecodedLicense decodedLicense = new DecodedLicense(LicenseType.ENTERPRISE, VERSION, new byte[]{1,2,3,4});
-
-        expectedException.expect(UnsupportedOperationException.class);
-        expectedException.expectMessage("Only self generated licenses are supported");
-        licenseService.licenseData(decodedLicense);
-    }
-
-    @Test
-    public void testOnlySelfGeneratedLicenseIsSupported() {
-        expectedException.expect(UnsupportedOperationException.class);
-        expectedException.expectMessage("Only self generated licenses are supported");
-
-        licenseService.createLicenseKey(LicenseType.ENTERPRISE, VERSION, new DecryptedLicenseData(Long.MAX_VALUE, "test"));
-        //licenseService.createLicenseKey(-2, VERSION, new DecryptedLicenseData(Long.MAX_VALUE, "test"));
-    }
-
 
     @Test
     public void testGenerateSelfGeneratedKey() {
@@ -189,5 +78,70 @@ public class LicenseServiceTest extends CrateDummyClusterServiceUnitTest {
         assertThat(licenseInfo.issuedTo(), Matchers.is("test"));
     }
 
+    @Test
+    public void testGetLicenseData() throws IOException {
+        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.SELF_GENERATED, VERSION,
+            new DecryptedLicenseData(Long.MAX_VALUE, "test"));
+        DecryptedLicenseData licenseData = licenseService.licenseData(LicenseKey.decodeLicense(licenseKey));
 
+        assertThat(licenseData.expirationDateInMs(), is(Long.MAX_VALUE));
+        assertThat(licenseData.issuedTo(), is("test"));
+    }
+
+    @Test
+    public void testVerifyValidSelfGeneratedLicense() {
+        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.SELF_GENERATED, VERSION,
+            new DecryptedLicenseData(Long.MAX_VALUE, "test"));
+        assertThat(LicenseService.verifyLicense(licenseKey), is(true));
+    }
+
+    @Test
+    public void testVerifyExpiredSelfGeneratedLicense() {
+        LicenseKey expiredLicense = licenseService.createLicenseKey(LicenseType.SELF_GENERATED, VERSION,
+            new DecryptedLicenseData(System.currentTimeMillis() - 5 * 60 * 60 * 1000, "test"));
+
+        assertThat(LicenseService.verifyLicense(expiredLicense), is(false));
+    }
+
+    @Test
+    public void testVerifyValidEnterpriseLicense() {
+        DecryptedLicenseData licenseData = new DecryptedLicenseData(Long.MAX_VALUE, "test");
+        licenseData = signLicenseForTesting(licenseData);
+
+        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.ENTERPRISE, LicenseKey.VERSION, licenseData);
+        assertThat(LicenseService.verifyLicense(licenseKey), is(true));
+    }
+
+    @Test
+    public void testVerifyTamperedEnterpriseLicense() {
+        DecryptedLicenseData originalLicenseData = new DecryptedLicenseData(Long.MAX_VALUE, "test");
+        originalLicenseData = signLicenseForTesting(originalLicenseData);
+
+        // someone tries to change expiration_date: MAX_VALUE -> MIN_VALUE
+        DecryptedLicenseData tamperedLicenseData = new DecryptedLicenseData(Long.MIN_VALUE, "test");
+        tamperedLicenseData.setSignature(originalLicenseData.signature());
+
+        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.ENTERPRISE, LicenseKey.VERSION, tamperedLicenseData);
+        assertThat(LicenseService.verifyLicense(licenseKey), is(false));
+    }
+
+    @Test
+    public void testVerifyExpiredEnterpriseLicense() {
+        DecryptedLicenseData expiredLicenseData = new DecryptedLicenseData(
+            System.currentTimeMillis() - 5 * 60 * 60 * 1000, "test");
+        expiredLicenseData = signLicenseForTesting(expiredLicenseData);
+
+        LicenseKey expiredLicense = licenseService.createLicenseKey(LicenseType.ENTERPRISE,
+            LicenseKey.VERSION, expiredLicenseData);
+
+        assertThat(LicenseService.verifyLicense(expiredLicense), is(false));
+    }
+
+    @Test
+    public void testInvalidLicenseTypeThrowsException() {
+        expectedException.expect(InvalidLicenseException.class);
+        expectedException.expectMessage("Invalid License Type");
+
+        licenseService.createLicenseKey(LicenseType.of(-2), VERSION, new DecryptedLicenseData(Long.MAX_VALUE, "test"));
+    }
 }

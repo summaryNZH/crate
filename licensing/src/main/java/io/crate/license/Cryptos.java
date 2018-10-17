@@ -22,8 +22,6 @@
 
 package io.crate.license;
 
-import org.elasticsearch.common.hash.MessageDigests;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -56,17 +54,9 @@ final class Cryptos {
     private static final String KEY_ALGORITHM = "RSA";
     private static final int KEY_SIZE = 2048;
     private static final String SIGN_ALGORITHM = "SHA512withRSA";
-
+    private static final String DIGEST_ALGORITHM = "SHA-256";
 
     private Cryptos() {
-    }
-
-    /**
-     * Gets the public key content from {@link PublicKey}
-     */
-    static byte[] publicKey(PublicKey publicKey) {
-        X509EncodedKeySpec encodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        return encodedKeySpec.getEncoded();
     }
 
     /**
@@ -81,19 +71,12 @@ final class Cryptos {
         }
     }
 
-    /**
-     *  Gets the encrypted private key content from {@link PrivateKey}
-     */
-    static byte[] encryptPrivateKey(PrivateKey privateKey) {
-        PKCS8EncodedKeySpec encodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        return encrypt(encodedKeySpec.getEncoded());
-    }
 
     /**
      * Get a {@link PrivateKey} from the encrypted key content
      */
-    static PrivateKey decryptPrivateKey(byte[] encryptedPrivateKeyBytes) {
-        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(decrypt(encryptedPrivateKeyBytes));
+    static PrivateKey getPrivateKey(byte[] privateKeyBytes) {
+        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
         try {
             return KeyFactory.getInstance(KEY_ALGORITHM).generatePrivate(privateKeySpec);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -118,15 +101,27 @@ final class Cryptos {
             keyGen.initialize(KEY_SIZE, random);
             KeyPair keyPair = keyGen.generateKeyPair();
 
-            // encrypt the private key
-            // todo: currently performing basic AES encryption - should we change this?
-            byte[] encryptedPrivateKey = encryptPrivateKey(keyPair.getPrivate());
-            Files.write(privateKeyPath, encryptedPrivateKey);
-            // public key can be stored as plain text
-            Files.write(publicKeyPath, publicKey(keyPair.getPublic()));
+            Files.write(publicKeyPath, getPublicKeyBytes(keyPair.getPublic()));
+            Files.write(privateKeyPath, getPrivateKeyBytes(keyPair.getPrivate()));
         } catch (NoSuchAlgorithmException | IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Gets the public key content from {@link PublicKey}
+     */
+    private static byte[] getPublicKeyBytes(PublicKey publicKey) {
+        X509EncodedKeySpec encodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
+        return encodedKeySpec.getEncoded();
+    }
+
+    /**
+     *  Gets the private key content from {@link PrivateKey}
+     */
+    private static byte[] getPrivateKeyBytes(PrivateKey privateKey) {
+        PKCS8EncodedKeySpec encodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
+        return encodedKeySpec.getEncoded();
     }
 
     static byte[] encrypt(byte[] data) {
@@ -151,9 +146,13 @@ final class Cryptos {
         }
     }
 
-    static byte[] digest(byte[] inputBytes) {
-        MessageDigest sha256 = MessageDigests.sha256();
-        sha256.update(inputBytes);
-        return sha256.digest();
+    static byte[] sha256Digest(byte[] inputBytes) {
+        try {
+            MessageDigest sha256 = MessageDigest.getInstance(DIGEST_ALGORITHM);
+            sha256.update(inputBytes);
+            return sha256.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }
