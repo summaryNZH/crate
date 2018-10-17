@@ -123,7 +123,7 @@ public class DecryptedLicenseData {
                 .field(EXPIRATION_DATE_IN_MS, expirationDateInMs)
                 .field(ISSUED_TO, issuedTo);
             if (includeSignature) {
-                contentBuilder.field(SIGNATURE, signature);
+                contentBuilder.field(SIGNATURE, signature());
             }
             contentBuilder.endObject();
             return contentBuilder.string().getBytes(StandardCharsets.UTF_8);

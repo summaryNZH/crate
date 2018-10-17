@@ -22,6 +22,7 @@
 
 package io.crate.license;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.crate.license.exception.InvalidLicenseException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.cluster.ClusterChangedEvent;
@@ -41,7 +42,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Base64;
@@ -79,6 +79,7 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
     /**
      * Encrypts the provided license data and creates a #{@link LicenseKey}
      */
+    @VisibleForTesting
     LicenseKey createLicenseKey(LicenseType licenseType, int version, DecryptedLicenseData decryptedLicenseData) {
         byte[] encryptedContent = encryptLicenseContent(decryptedLicenseData.formatLicenseData());
         return LicenseKey.createLicenseKey(licenseType, version, encryptedContent);
@@ -95,7 +96,7 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
     }
 
     DecryptedLicenseData licenseData(DecodedLicense decodedLicense) throws IOException {
-        if (decodedLicense.type() == LicenseKey.SELF_GENERATED) {
+        if (decodedLicense.type() == LicenseType.SELF_GENERATED) {
             return decryptLicenseContent(decodedLicense.encryptedContent());
         } else {
             throw new UnsupportedOperationException("Only self generated licenses are supported.");
@@ -144,7 +145,6 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
                 // todo: check if this is needed or
                 // todo: if we need changes in the registerLicense for `set license` statement
                 // todo: i.e. is the currentLicense properly set after metadata registration?
-                currentLicense.set(licenseKey);
                 currentLicense.set(licenseData);
                 registerLicense(licenseKey,
                     new ActionListener<SetLicenseResponse>() {
@@ -162,7 +162,7 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
         }
     }
 
-    //@VisibleForTesting
+    @VisibleForTesting
     boolean verifyLicense(LicenseKey licenseKey) {
         try {
             DecodedLicense decodedLicense = decodeLicense(licenseKey);
@@ -181,19 +181,19 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
         }
     }
 
-    //@VisibleForTesting
+    @VisibleForTesting
     static DecryptedLicenseData decryptLicenseContent(byte[] encryptedContent) throws IOException {
         byte[] decryptedContent = Cryptos.decrypt(encryptedContent);
         return DecryptedLicenseData.fromFormattedLicenseData(decryptedContent);
     }
 
 
-    //@VisibleForTesting
+    @VisibleForTesting
     static byte[] encryptLicenseContent(byte[] content) {
         return Cryptos.encrypt(content);
     }
 
-    private static boolean verifySignature(final DecryptedLicenseData license) {
+    private boolean verifySignature(final DecryptedLicenseData license) {
         final byte[] publicKeyBytes;
         try (InputStream is = LicenseService.class.getResourceAsStream("/public.key")) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -208,31 +208,33 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
     private static boolean verifySignature(final DecryptedLicenseData licenseData, byte[] publicKeyBytes) {
         try {
             // init signature with public key
-            Signature rsa = Signature.getInstance("SHA512withRSA");
-            rsa.initVerify(Cryptos.readPublicKey(publicKeyBytes));
+            Signature rsa = Cryptos.rsaSignatureInstance();
+            rsa.initVerify(Cryptos.getPublicKey(publicKeyBytes));
             // feed signature data
             byte[] data = Cryptos.digest(licenseData.formatLicenseDataForSignature());
             rsa.update(data);
             // verify signature
             byte[] signatureToVerify = Base64.getDecoder().decode(licenseData.signature());
             return rsa.verify(signatureToVerify);
-        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
+        } catch (SignatureException | InvalidKeyException e) {
             throw new IllegalStateException(e);
         }
     }
 
-    private static byte[] createSignature(DecryptedLicenseData licenseData, byte[] privateKeyBytes) {
+    @VisibleForTesting
+    static DecryptedLicenseData signLicense(DecryptedLicenseData licenseData, byte[] encryptedPrivateKeyBytes) {
         try {
-            // init signature with public key
-            Signature rsa = Signature.getInstance("SHA512withRSA");
-            // todo: private Key should be encrypted
-            rsa.initSign(Cryptos.readPrivateKey(privateKeyBytes));
+            // init signature with private key
+            Signature rsa = Cryptos.rsaSignatureInstance();
+            rsa.initSign(Cryptos.decryptPrivateKey(encryptedPrivateKeyBytes));
             // feed signature data
             byte[] data = Cryptos.digest(licenseData.formatLicenseDataForSignature());
             rsa.update(data);
             // sign
-            return rsa.sign();
-        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
+            byte[] signedContent = rsa.sign();
+            licenseData.setSignature(Base64.getEncoder().encodeToString(signedContent));
+            return licenseData;
+        } catch (SignatureException | InvalidKeyException e) {
             throw new IllegalStateException(e);
         }
     }

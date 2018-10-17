@@ -22,6 +22,7 @@
 
 package io.crate.license;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.crate.license.exception.InvalidLicenseException;
 import io.crate.license.exception.LicenseMetadataParsingException;
 import org.elasticsearch.cluster.AbstractNamedDiffable;
@@ -77,7 +78,8 @@ public class LicenseKey extends AbstractNamedDiffable<MetaData.Custom> implement
 
     // limit the maximum license content number of bytes (this can vary based on the algorithm used for encryption and
     // the length of the client's name the license is issued to
-    private static final int MAX_LICENSE_CONTENT_LENGTH = 256;
+    @VisibleForTesting
+    static final int MAX_LICENSE_CONTENT_LENGTH = 512;
 
     private String licenseKey;
 

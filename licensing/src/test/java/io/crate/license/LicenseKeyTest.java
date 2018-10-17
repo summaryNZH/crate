@@ -59,15 +59,15 @@ public class LicenseKeyTest extends CrateUnitTest {
 
     @Test
     public void decodeTooLongLicenseRaisesException() {
-        byte[] largeContent = new byte[257];
-        IntStream.range(0, 257).forEach(i -> largeContent[i] = 15);
+        byte[] largeContent = new byte[LicenseKey.MAX_LICENSE_CONTENT_LENGTH + 1];
+        IntStream.range(0, LicenseKey.MAX_LICENSE_CONTENT_LENGTH + 1).forEach(i -> largeContent[i] = 15);
 
         // adjust first bytes to match a valid license type
         ByteBuffer largeContentBuffer = ByteBuffer.wrap(largeContent);
         largeContentBuffer.putInt(LicenseType.SELF_GENERATED.value());
 
         expectedException.expect(InvalidLicenseException.class);
-        expectedException.expectMessage("The provided license key exceeds the maximum length of 256");
+        expectedException.expectMessage("The provided license key exceeds the maximum length of " + LicenseKey.MAX_LICENSE_CONTENT_LENGTH);
         LicenseKey.decodeLicense(new LicenseKey(new String(Base64.getEncoder().encode(largeContentBuffer.array()))));
     }
 }

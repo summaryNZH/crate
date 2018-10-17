@@ -24,12 +24,20 @@ package io.crate.license;
 
 import io.crate.license.exception.InvalidLicenseException;
 import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
+import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.settings.Settings;
 import org.hamcrest.Matchers;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static io.crate.license.LicenseKey.LicenseType;
 
@@ -42,7 +50,37 @@ import static org.mockito.Mockito.mock;
 
 public class LicenseServiceTest extends CrateDummyClusterServiceUnitTest {
 
+    private static Path publicKeyPath;
+    private static Path privateKeyPath;
+
     private LicenseService licenseService;
+
+    private static DecryptedLicenseData signLicenseForTesting(DecryptedLicenseData licenseData) {
+        final byte[] encryptedPrivateKeyBytes;
+        try (InputStream is = LicenseServiceTest.class.getResourceAsStream("/private.key")) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Streams.copy(is, out);
+            encryptedPrivateKeyBytes = out.toByteArray();
+        } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
+        return LicenseService.signLicense(licenseData, encryptedPrivateKeyBytes);
+    }
+
+    @BeforeClass
+    private static void setup() {
+        // hacky all the way and works only in IDEA
+        // todo: change
+        publicKeyPath = Paths.get("licensing/build-idea/classes/main", "/public.key");
+        privateKeyPath = Paths.get("licensing/build-idea/classes/test","/private.key");
+        Cryptos.generateAndWriteAsymmetricKeysToFiles(publicKeyPath, privateKeyPath);
+    }
+
+    @AfterClass
+    private static void teardown() throws IOException {
+        Files.deleteIfExists(publicKeyPath);
+        Files.deleteIfExists(privateKeyPath);
+    }
 
     @Before
     public void setupLicenseService() {
@@ -60,6 +98,40 @@ public class LicenseServiceTest extends CrateDummyClusterServiceUnitTest {
     public void testVerifyExpiredSelfGeneratedLicense() {
         LicenseKey expiredLicense = licenseService.createLicenseKey(LicenseType.SELF_GENERATED, VERSION,
             new DecryptedLicenseData(System.currentTimeMillis() - 5 * 60 * 60 * 1000, "test"));
+
+        assertThat(licenseService.verifyLicense(expiredLicense), is(false));
+    }
+
+    @Test
+    public void testVerifyValidEnterpriseLicense() {
+        DecryptedLicenseData licenseData = new DecryptedLicenseData(Long.MAX_VALUE, "test");
+        licenseData = signLicenseForTesting(licenseData);
+
+        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.ENTERPRISE, LicenseKey.VERSION, licenseData);
+        assertThat(licenseService.verifyLicense(licenseKey), is(true));
+    }
+
+    @Test
+    public void testVerifyTamperedEnterpriseLicense() {
+        DecryptedLicenseData originalLicenseData = new DecryptedLicenseData(Long.MAX_VALUE, "test");
+        originalLicenseData = signLicenseForTesting(originalLicenseData);
+
+        // someone tries to change expiration_date: MAX_VALUE -> MIN_VALUE
+        DecryptedLicenseData tamperedLicenseData = new DecryptedLicenseData(Long.MIN_VALUE, "test");
+        tamperedLicenseData.setSignature(originalLicenseData.signature());
+
+        LicenseKey licenseKey = licenseService.createLicenseKey(LicenseType.ENTERPRISE, LicenseKey.VERSION, tamperedLicenseData);
+        assertThat(licenseService.verifyLicense(licenseKey), is(false));
+    }
+
+    @Test
+    public void testVerifyExpiredEnterpriseLicense() {
+        DecryptedLicenseData expiredLicenseData = new DecryptedLicenseData(
+            System.currentTimeMillis() - 5 * 60 * 60 * 1000, "test");
+        expiredLicenseData = signLicenseForTesting(expiredLicenseData);
+
+        LicenseKey expiredLicense = licenseService.createLicenseKey(LicenseType.ENTERPRISE,
+            LicenseKey.VERSION, expiredLicenseData);
 
         assertThat(licenseService.verifyLicense(expiredLicense), is(false));
     }

@@ -24,6 +24,11 @@ package io.crate.license;
 
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -41,4 +46,20 @@ public class CryptosTest {
         assertThat(new String(decrypt), is(data));
     }
 
+    @Test
+    public void testCreateAsymmetricKeys() throws IOException {
+        final Path publicKeyPath = Paths.get("public.key");
+        final Path privateKeyPath = Paths.get("private.key");
+
+        Cryptos.generateAndWriteAsymmetricKeysToFiles(publicKeyPath, privateKeyPath);
+
+        assertThat(Files.exists(publicKeyPath), is(true));
+        assertThat(Files.exists(privateKeyPath), is(true));
+
+        Files.deleteIfExists(publicKeyPath);
+        Files.deleteIfExists(privateKeyPath);
+
+        assertThat(Files.exists(publicKeyPath), is(false));
+        assertThat(Files.exists(privateKeyPath), is(false));
+    }
 }

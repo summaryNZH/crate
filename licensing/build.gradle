@@ -28,6 +28,8 @@ description = 'CrateDB License Management'
 
 dependencies {
     compile project(':es:es-core')
+    compile "com.google.guava:guava:${versions.guava}"
+
     testCompile "junit:junit:${versions.junit}"
     testCompile project(':integration-testing')
 }
