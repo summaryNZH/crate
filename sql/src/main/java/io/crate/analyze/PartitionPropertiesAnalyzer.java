@@ -31,8 +31,8 @@ import io.crate.metadata.Reference;
 import io.crate.metadata.RelationName;
 import io.crate.metadata.doc.DocTableInfo;
 import io.crate.sql.tree.Assignment;
-import io.crate.types.DataTypes;
 import org.apache.lucene.util.BytesRef;
+import org.elasticsearch.common.lucene.BytesRefs;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -75,7 +75,7 @@ public class PartitionPropertiesAnalyzer {
             try {
                 Reference reference = tableInfo.partitionedByColumns().get(idx);
                 Object converted = reference.valueType().value(value);
-                values[idx] = converted == null ? null : DataTypes.STRING.value(converted);
+                values[idx] = converted == null ? null : BytesRefs.toBytesRef(converted);
             } catch (IndexOutOfBoundsException ex) {
                 throw new IllegalArgumentException(
                     String.format(Locale.ENGLISH, "\"%s\" is no known partition column", entry.getKey().sqlFqn()));
@@ -98,7 +98,7 @@ public class PartitionPropertiesAnalyzer {
 
         int idx = 0;
         for (Object o : properties.values()) {
-            values[idx++] = DataTypes.STRING.value(o);
+            values[idx++] = BytesRefs.toBytesRef(o);
         }
         return new PartitionName(relationName, Arrays.asList(values));
     }

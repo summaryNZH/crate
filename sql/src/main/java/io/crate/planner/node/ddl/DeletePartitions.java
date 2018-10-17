@@ -37,10 +37,10 @@ import io.crate.planner.DependencyCarrier;
 import io.crate.planner.Plan;
 import io.crate.planner.PlannerContext;
 import io.crate.planner.operators.SubQueryResults;
-import io.crate.types.DataTypes;
 import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.common.lucene.BytesRefs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +83,7 @@ public class DeletePartitions implements Plan {
     ArrayList<String> getIndices(Functions functions, Row parameters, SubQueryResults subQueryResults) {
         ArrayList<String> indexNames = new ArrayList<>();
         Function<Symbol, BytesRef> symbolToBytesRef =
-            s -> DataTypes.STRING.value(SymbolEvaluator.evaluate(functions, s, parameters, subQueryResults));
+            s -> BytesRefs.toBytesRef(SymbolEvaluator.evaluate(functions, s, parameters, subQueryResults));
         for (List<Symbol> partitionValues : partitions) {
             List<BytesRef> values = Lists2.map(partitionValues, symbolToBytesRef);
             String indexName = IndexParts.toIndexName(relationName, PartitionName.encodeIdent(values));

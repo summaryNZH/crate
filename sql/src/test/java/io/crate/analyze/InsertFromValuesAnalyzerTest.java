@@ -479,7 +479,7 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
             new Object[]{1, new MapBuilder<String, Object>().put("b", 4).map()});
         assertThat(analysis.ids().size(), is(1));
         assertThat(analysis.ids().get(0),
-            is(generateId(Arrays.asList(new ColumnIdent("id"), new ColumnIdent("o.b")), Arrays.asList(new BytesRef("1"), new BytesRef("4")), new ColumnIdent("o.b"))));
+            is(generateId(Arrays.asList(new ColumnIdent("id"), new ColumnIdent("o.b")), Arrays.asList("1", "4"), new ColumnIdent("o.b"))));
     }
 
     @Test
@@ -488,7 +488,7 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
             new Object[]{1, new MapBuilder<String, Object>().put("b", 4).map()});
         assertThat(analysis.ids().size(), is(1));
         assertThat(analysis.ids().get(0),
-            is(generateId(Arrays.asList(new ColumnIdent("id"), new ColumnIdent("o.b")), Arrays.asList(new BytesRef("1"), new BytesRef("4")), new ColumnIdent("o.b"))));
+            is(generateId(Arrays.asList(new ColumnIdent("id"), new ColumnIdent("o.b")), Arrays.asList("1", "4"), new ColumnIdent("o.b"))));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -506,11 +506,11 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
         InsertFromValuesAnalyzedStatement analysis = e.analyze("insert into nested_pk (o, id) values (?, ?)",
             new Object[]{new MapBuilder<String, Object>().put("b", 4).map(), 1});
         assertThat(analysis.ids().get(0),
-            is(generateId(Arrays.asList(new ColumnIdent("id"), new ColumnIdent("o.b")), Arrays.asList(new BytesRef("1"), new BytesRef("4")), new ColumnIdent("o.b"))));
+            is(generateId(Arrays.asList(new ColumnIdent("id"), new ColumnIdent("o.b")), Arrays.asList("1", "4"), new ColumnIdent("o.b"))));
 
     }
 
-    private String generateId(List<ColumnIdent> pkColumns, List<BytesRef> pkValues, ColumnIdent clusteredBy) {
+    private String generateId(List<ColumnIdent> pkColumns, List<String> pkValues, ColumnIdent clusteredBy) {
         return Id.compileWithNullValidation(pkColumns, clusteredBy).apply(pkValues);
     }
 
@@ -1277,7 +1277,7 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
         );
         assertThat(analysis.routingValues(), contains("AgEyATI="));
         assertThat(analysis.ids().get(0),
-            is(generateId(Arrays.asList(new ColumnIdent("id"), new ColumnIdent("id2")), Arrays.asList(new BytesRef("2"), new BytesRef("2")), new ColumnIdent("id"))));
+            is(generateId(Arrays.asList(new ColumnIdent("id"), new ColumnIdent("id2")), Arrays.asList("2", "2"), new ColumnIdent("id"))));
     }
 
     @Test
@@ -1289,10 +1289,10 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
         assertThat(analysis.ids(), contains(
             is(generateId(
                 Arrays.asList(new ColumnIdent("id"), new ColumnIdent("id2")),
-                Arrays.asList(new BytesRef("2"), new BytesRef("2")), new ColumnIdent("id"))),
+                Arrays.asList("2", "2"), new ColumnIdent("id"))),
             is(generateId(
                 Arrays.asList(new ColumnIdent("id"), new ColumnIdent("id2")),
-                Arrays.asList(new BytesRef("3"), new BytesRef("3")), new ColumnIdent("id")))
+                Arrays.asList("3", "3"), new ColumnIdent("id")))
         ));
     }
 
@@ -1304,7 +1304,7 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
         assertThat(analysis.ids().get(0),
             is(generateId(
                 Arrays.asList(new ColumnIdent("value"), new ColumnIdent("part_key__generated")),
-                Arrays.asList(new BytesRef("1"), new BytesRef("1508803200000")),
+                Arrays.asList("1", "1508803200000"),
                 null)));
         assertThat(analysis.generatePartitions().size(), is(1));
     }

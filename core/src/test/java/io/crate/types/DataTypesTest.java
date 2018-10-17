@@ -42,8 +42,8 @@ public class DataTypesTest extends CrateUnitTest {
 
     @Test
     public void testConvertBooleanToString() {
-        BytesRef value = DataTypes.STRING.value(true);
-        assertEquals(new BytesRef("t"), value);
+        String value = DataTypes.STRING.value(true);
+        assertEquals("t", value);
     }
 
     @Test

@@ -22,10 +22,10 @@
 package io.crate.expression.scalar;
 
 import com.google.common.collect.ImmutableList;
+import io.crate.data.Input;
 import io.crate.expression.symbol.Function;
 import io.crate.expression.symbol.Literal;
 import io.crate.expression.symbol.Symbol;
-import io.crate.data.Input;
 import io.crate.metadata.FunctionIdent;
 import io.crate.metadata.FunctionInfo;
 import io.crate.metadata.Scalar;
@@ -109,7 +109,7 @@ public class DateTruncFunction extends Scalar<Long, Object> {
         if (interval == null) {
             return this;
         }
-        BytesRef timeZone = TimeZoneParser.DEFAULT_TZ_BYTES_REF;
+        BytesRef timeZone = new BytesRef(TimeZoneParser.DEFAULT_TZ_BYTES_REF);
         if (arguments.size() == 3) {
             timeZone = (BytesRef) ((Input) arguments.get(1)).value();
         }
@@ -147,7 +147,7 @@ public class DateTruncFunction extends Scalar<Long, Object> {
     public final Long evaluate(Input[] args) {
         assert args.length > 1 && args.length < 4 : "Invalid number of arguments";
         Object value;
-        BytesRef timeZone = TimeZoneParser.DEFAULT_TZ_BYTES_REF;
+        BytesRef timeZone = new BytesRef(TimeZoneParser.DEFAULT_TZ_BYTES_REF);
         if (args.length == 2) {
             value = args[1].value();
         } else {

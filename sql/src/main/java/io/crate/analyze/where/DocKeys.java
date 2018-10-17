@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 public class DocKeys implements Iterable<DocKeys.DocKey> {
 
     private final int width;
-    private final Function<List<BytesRef>, String> idFunction;
+    private final Function<List<String>, String> idFunction;
     private int clusteredByIdx;
     private final boolean withVersions;
     private final List<List<Symbol>> docKeys;
@@ -86,7 +86,7 @@ public class DocKeys implements Iterable<DocKeys.DocKey> {
             }
             return Lists.transform(
                 partitionIdx,
-                pIdx -> DataTypes.STRING.value(SymbolEvaluator.evaluate(functions, key.get(pIdx), params, subQueryResults)));
+                pIdx -> new BytesRef(DataTypes.STRING.value(SymbolEvaluator.evaluate(functions, key.get(pIdx), params, subQueryResults))));
 
         }
 

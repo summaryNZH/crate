@@ -23,9 +23,9 @@
 package io.crate.expression.reference.sys.check.node;
 
 import io.crate.data.Input;
+import io.crate.expression.reference.sys.SysRowUpdater;
 import io.crate.metadata.ColumnIdent;
 import io.crate.metadata.sys.SysNodeChecksTableInfo;
-import io.crate.expression.reference.sys.SysRowUpdater;
 import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.component.LifecycleListener;
@@ -41,7 +41,7 @@ import java.util.function.BiConsumer;
 @Singleton
 public class SysNodeChecks implements SysRowUpdater<SysNodeCheck>, Iterable<SysNodeCheck> {
 
-    private final Map<BytesRef, SysNodeCheck> checks;
+    private final Map<String, SysNodeCheck> checks;
     private static final BiConsumer<SysNodeCheck, Input<?>> ackWriter =
         (row, input) -> row.acknowledged((Boolean) input.value());
 
@@ -52,7 +52,7 @@ public class SysNodeChecks implements SysRowUpdater<SysNodeCheck>, Iterable<SysN
         discovery.addLifecycleListener(new LifecycleListener() {
             @Override
             public void afterStart() {
-                BytesRef nodeId = new BytesRef(clusterService.localNode().getId());
+                String nodeId = clusterService.localNode().getId();
                 for (SysNodeCheck sysNodeCheck : checks.values()) {
                     sysNodeCheck.setNodeId(nodeId);
                     SysNodeChecks.this.checks.put(sysNodeCheck.rowId(), sysNodeCheck);

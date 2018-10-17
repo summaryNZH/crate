@@ -236,7 +236,7 @@ final class GroupByOptimizedIterator {
 
                 @Override
                 public Row apply(Map.Entry<BytesRef, Object[]> entry) {
-                    cells[0] = entry.getKey();
+                    cells[0] = entry.getKey().utf8ToString();
                     Object[] states = entry.getValue();
                     for (int i = 0, c = 1; i < states.length; i++, c++) {
                         //noinspection unchecked

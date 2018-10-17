@@ -22,22 +22,23 @@
 package io.crate.expression.scalar;
 
 import com.google.common.base.Preconditions;
+import io.crate.data.Input;
 import io.crate.expression.symbol.Function;
 import io.crate.expression.symbol.Literal;
 import io.crate.expression.symbol.Symbol;
-import io.crate.data.Input;
 import io.crate.metadata.BaseFunctionResolver;
-import io.crate.metadata.functions.params.FuncParams;
 import io.crate.metadata.FunctionIdent;
 import io.crate.metadata.FunctionImplementation;
 import io.crate.metadata.FunctionInfo;
 import io.crate.metadata.Scalar;
 import io.crate.metadata.TransactionContext;
+import io.crate.metadata.functions.params.FuncParams;
 import io.crate.metadata.functions.params.Param;
 import io.crate.types.ArrayType;
 import io.crate.types.DataType;
 import io.crate.types.DataTypes;
 import org.apache.lucene.util.BytesRef;
+import org.elasticsearch.common.lucene.BytesRefs;
 
 import java.util.List;
 import java.util.Locale;
@@ -112,7 +113,7 @@ public abstract class ConcatFunction extends Scalar<BytesRef, BytesRef> {
             int numBytes = 0;
             for (int i = 0; i < args.length; i++) {
                 Input input = args[i];
-                BytesRef value = DataTypes.STRING.value(input.value());
+                BytesRef value = BytesRefs.toBytesRef(input.value());
                 if (value == null) {
                     value = EMPTY_STRING;
                 }

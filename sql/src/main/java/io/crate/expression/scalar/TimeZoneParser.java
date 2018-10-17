@@ -35,8 +35,8 @@ import java.util.concurrent.ConcurrentMap;
 public class TimeZoneParser {
 
     public static final DateTimeZone DEFAULT_TZ = DateTimeZone.UTC;
-    public static final Literal<BytesRef> DEFAULT_TZ_LITERAL = Literal.of("UTC");
-    public static final BytesRef DEFAULT_TZ_BYTES_REF = DEFAULT_TZ_LITERAL.value();
+    public static final Literal<String> DEFAULT_TZ_LITERAL = Literal.of("UTC");
+    public static final String DEFAULT_TZ_BYTES_REF = DEFAULT_TZ_LITERAL.value();
 
     private static final ConcurrentMap<BytesRef, DateTimeZone> TIME_ZONE_MAP = new ConcurrentHashMap<>();
 
@@ -47,7 +47,7 @@ public class TimeZoneParser {
         if (timezone == null) {
             throw new IllegalArgumentException("invalid time zone value NULL");
         }
-        if (timezone.equals(DEFAULT_TZ_BYTES_REF)) {
+        if (timezone.utf8ToString().equals(DEFAULT_TZ_BYTES_REF)) {
             return DEFAULT_TZ;
         }
 

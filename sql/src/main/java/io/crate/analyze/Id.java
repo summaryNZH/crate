@@ -40,18 +40,14 @@ import static io.crate.collections.Lists2.getOnlyElement;
 
 public class Id {
 
-    private static final Function<List<BytesRef>, String> RANDOM_ID = ignored -> UUIDs.base64UUID();
+    private static final Function<List<String>, String> RANDOM_ID = ignored -> UUIDs.base64UUID();
 
-    private static final Function<List<BytesRef>, String> ONLY_ITEM_NULL_VALIDATION = keyValues -> {
-        return ensureNonNull(getOnlyElement(keyValues)).utf8ToString();
+    private static final Function<List<String>, String> ONLY_ITEM_NULL_VALIDATION = keyValues -> {
+        return ensureNonNull(getOnlyElement(keyValues));
     };
 
-    private static final Function<List<BytesRef>, String> ONLY_ITEM = keyValues -> {
-        BytesRef element = getOnlyElement(keyValues);
-        if (element == null) {
-            return null;
-        }
-        return element.utf8ToString();
+    private static final Function<List<String>, String> ONLY_ITEM = keyValues -> {
+        return getOnlyElement(keyValues);
     };
 
 
@@ -60,8 +56,8 @@ public class Id {
      * <p>
      * This variant doesn't handle the pk = _id case.
      */
-    private static Function<List<BytesRef>, String> compileWithNullValidation(final int numPks,
-                                                                              final int clusteredByPosition) {
+    private static Function<List<String>, String> compileWithNullValidation(final int numPks,
+                                                                            final int clusteredByPosition) {
         switch (numPks) {
             case 0:
                 return RANDOM_ID;
@@ -82,7 +78,7 @@ public class Id {
      * <p>
      * This variant doesn't handle the pk = _id case.
      */
-    public static Function<List<BytesRef>, String> compile(final int numPks, final int clusteredByPosition) {
+    public static Function<List<String>, String> compile(final int numPks, final int clusteredByPosition) {
         if (numPks == 1) {
             return ONLY_ITEM;
         }
@@ -92,7 +88,7 @@ public class Id {
     /**
      * returns a function which can be used to generate an id with null validation.
      */
-    public static Function<List<BytesRef>, String> compileWithNullValidation(final List<ColumnIdent> pkColumns, final ColumnIdent clusteredBy) {
+    public static Function<List<String>, String> compileWithNullValidation(final List<ColumnIdent> pkColumns, final ColumnIdent clusteredBy) {
         final int numPks = pkColumns.size();
         if (numPks == 1 && getOnlyElement(pkColumns).equals(DocSysColumns.ID)) {
             return RANDOM_ID;
@@ -102,23 +98,23 @@ public class Id {
 
 
     @Nonnull
-    private static BytesRef ensureNonNull(@Nullable BytesRef pkValue) throws IllegalArgumentException {
+    private static <T> T ensureNonNull(@Nullable T pkValue) throws IllegalArgumentException {
         if (pkValue == null) {
             throw new IllegalArgumentException("A primary key value must not be NULL");
         }
         return pkValue;
     }
 
-    private static String encode(List<BytesRef> values, int clusteredByPosition) {
+    private static String encode(List<String> values, int clusteredByPosition) {
         try (BytesStreamOutput out = new BytesStreamOutput(estimateSize(values))) {
             int size = values.size();
             out.writeVInt(size);
             if (clusteredByPosition >= 0) {
-                out.writeBytesRef(ensureNonNull(values.get(clusteredByPosition)));
+                out.writeBytesRef(new BytesRef(ensureNonNull(values.get(clusteredByPosition))));
             }
             for (int i = 0; i < size; i++) {
                 if (i != clusteredByPosition) {
-                    out.writeBytesRef(ensureNonNull(values.get(i)));
+                    out.writeBytesRef(new BytesRef(ensureNonNull(values.get(i))));
                 }
             }
             return Base64.getEncoder().encodeToString(BytesReference.toBytes(out.bytes()));
@@ -130,11 +126,11 @@ public class Id {
     /**
      * estimates the size the bytesRef values will take if written onto a StreamOutput using the String streamer
      */
-    private static int estimateSize(Iterable<BytesRef> values) {
+    private static int estimateSize(Iterable<String> values) {
         int expectedEncodedSize = 0;
-        for (BytesRef value : values) {
+        for (String value : values) {
             // 5 bytes for the value of the length itself using vInt
-            expectedEncodedSize += 5 + (value != null ? value.length : 0);
+            expectedEncodedSize += 5 + (value != null ? value.length() : 0);
         }
         return expectedEncodedSize;
     }

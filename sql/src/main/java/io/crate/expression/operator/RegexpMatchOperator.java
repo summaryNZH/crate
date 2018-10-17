@@ -27,11 +27,12 @@ import io.crate.types.DataTypes;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.automaton.ByteRunAutomaton;
 import org.apache.lucene.util.automaton.RegExp;
+import org.elasticsearch.common.lucene.BytesRefs;
 
 import static io.crate.expression.scalar.regex.RegexMatcher.isPcrePattern;
 
 
-public class RegexpMatchOperator extends Operator<BytesRef> {
+public class RegexpMatchOperator extends Operator<String> {
 
     public static final String NAME = "op_~";
     public static final FunctionInfo INFO = generateInfo(NAME, DataTypes.STRING);
@@ -42,13 +43,13 @@ public class RegexpMatchOperator extends Operator<BytesRef> {
 
 
     @Override
-    public Boolean evaluate(Input<BytesRef>... args) {
+    public Boolean evaluate(Input<String>... args) {
         assert args.length == 2 : "invalid number of arguments";
-        BytesRef source = args[0].value();
+        BytesRef source = BytesRefs.toBytesRef(args[0].value());
         if (source == null) {
             return null;
         }
-        BytesRef pattern = args[1].value();
+        BytesRef pattern = BytesRefs.toBytesRef(args[1].value());
         if (pattern == null) {
             return null;
         }

@@ -25,11 +25,12 @@ import io.crate.data.Input;
 import io.crate.metadata.FunctionInfo;
 import io.crate.types.DataTypes;
 import org.apache.lucene.util.BytesRef;
+import org.elasticsearch.common.lucene.BytesRefs;
 
 import java.util.regex.Pattern;
 
 
-public class RegexpMatchCaseInsensitiveOperator extends Operator<BytesRef> {
+public class RegexpMatchCaseInsensitiveOperator extends Operator<String> {
 
     public static final String NAME = "op_~*";
     public static final FunctionInfo INFO = generateInfo(NAME, DataTypes.STRING);
@@ -40,13 +41,13 @@ public class RegexpMatchCaseInsensitiveOperator extends Operator<BytesRef> {
 
 
     @Override
-    public Boolean evaluate(Input<BytesRef>... args) {
+    public Boolean evaluate(Input<String>... args) {
         assert args.length == 2 : "invalid number of arguments";
-        BytesRef source = args[0].value();
+        BytesRef source = BytesRefs.toBytesRef(args[0].value());
         if (source == null) {
             return null;
         }
-        BytesRef pattern = args[1].value();
+        BytesRef pattern = BytesRefs.toBytesRef(args[1].value());
         if (pattern == null) {
             return null;
         }

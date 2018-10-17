@@ -81,7 +81,7 @@ public class PartitionName {
             int size = in.readVInt();
             List<BytesRef> values = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
-                values.add(StringType.INSTANCE.streamer().readValueFrom(in));
+                values.add(new BytesRef(StringType.INSTANCE.streamer().readValueFrom(in)));
             }
             return values;
         } catch (IOException e) {
@@ -100,7 +100,7 @@ public class PartitionName {
         try {
             streamOutput.writeVInt(values.size());
             for (BytesRef value : values) {
-                StringType.INSTANCE.streamer().writeValueTo(streamOutput, value);
+                StringType.INSTANCE.streamer().writeValueTo(streamOutput, value.utf8ToString());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
