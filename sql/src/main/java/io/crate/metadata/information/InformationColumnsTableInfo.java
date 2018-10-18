@@ -134,11 +134,11 @@ public class InformationColumnsTableInfo extends InformationTableInfo {
             .put(Columns.DATA_TYPE,
                 () -> NestableCollectExpression.forFunction(r -> r.info.valueType().getName()))
             .put(Columns.COLUMN_DEFAULT,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.CHARACTER_MAXIMUM_LENGTH,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.CHARACTER_OCTET_LENGTH,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.NUMERIC_PRECISION,
                 () -> NestableCollectExpression.forFunction(r -> PRECISION_BY_TYPE_ID.get(r.info.valueType().id())))
             .put(Columns.NUMERIC_PRECISION_RADIX,
@@ -149,7 +149,7 @@ public class InformationColumnsTableInfo extends InformationTableInfo {
                     return null;
                 }))
             .put(Columns.NUMERIC_SCALE,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.DATETIME_PRECISION,
                 () -> NestableCollectExpression.forFunction(r -> {
                     if (r.info.valueType() == DataTypes.TIMESTAMP) {
@@ -158,37 +158,37 @@ public class InformationColumnsTableInfo extends InformationTableInfo {
                     return null;
                 }))
             .put(Columns.INTERVAL_TYPE,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.INTERVAL_PRECISION,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.CHARACTER_SET_CATALOG,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.CHARACTER_SET_SCHEMA,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.CHARACTER_SET_NAME,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.COLLATION_CATALOG,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.COLLATION_SCHEMA,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.COLLATION_NAME,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.DOMAIN_CATALOG,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.DOMAIN_SCHEMA,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.DOMAIN_NAME,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.USER_DEFINED_TYPE_CATALOG,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.USER_DEFINED_TYPE_SCHEMA,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.USER_DEFINED_TYPE_NAME,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.CHECK_REFERENCES,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.CHECK_ACTION,
-                () -> NestableCollectExpression.forFunction(r -> null))
+                () -> NestableCollectExpression.constant(null))
             .put(Columns.IS_GENERATED,
                 () -> NestableCollectExpression.forFunction(r -> r.info instanceof GeneratedReference))
             .put(Columns.IS_NULLABLE,

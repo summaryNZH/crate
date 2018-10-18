@@ -56,7 +56,7 @@ public class SysChecksTableInfo extends StaticTableInfo {
             .put(SysChecksTableInfo.Columns.ID,
                 () -> NestableCollectExpression.forFunction(SysCheck::id))
             .put(SysChecksTableInfo.Columns.DESCRIPTION,
-                () -> NestableCollectExpression.objToBytesRef(SysCheck::description))
+                () -> NestableCollectExpression.forFunction(SysCheck::description))
             .put(SysChecksTableInfo.Columns.SEVERITY,
                 () -> NestableCollectExpression.forFunction((SysCheck r) -> r.severity().value()))
             .put(SysChecksTableInfo.Columns.PASSED,

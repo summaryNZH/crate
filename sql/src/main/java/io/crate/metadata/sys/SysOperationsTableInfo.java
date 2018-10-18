@@ -61,11 +61,11 @@ public class SysOperationsTableInfo extends StaticTableInfo {
     public static Map<ColumnIdent, RowCollectExpressionFactory<OperationContext>> expressions(Supplier<DiscoveryNode> localNode) {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<OperationContext>>builder()
             .put(SysOperationsTableInfo.Columns.ID,
-                () -> NestableCollectExpression.objToBytesRef(OperationContext::id))
+                () -> NestableCollectExpression.forFunction(OperationContext::id))
             .put(SysOperationsTableInfo.Columns.JOB_ID,
-                () -> NestableCollectExpression.objToBytesRef(OperationContext::jobId))
+                () -> NestableCollectExpression.forFunction(OperationContext::jobId))
             .put(SysOperationsTableInfo.Columns.NAME,
-                () -> NestableCollectExpression.objToBytesRef(OperationContext::name))
+                () -> NestableCollectExpression.forFunction(OperationContext::name))
             .put(SysOperationsTableInfo.Columns.STARTED,
                 () -> NestableCollectExpression.forFunction(OperationContext::started))
             .put(SysOperationsTableInfo.Columns.USED_BYTES, () -> NestableCollectExpression.forFunction(r -> {

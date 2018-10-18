@@ -63,9 +63,9 @@ public class PgTypeTable extends StaticTableInfo {
             .put(Columns.OID,
                 () -> NestableCollectExpression.forFunction(PGType::oid))
             .put(Columns.TYPNAME,
-                () -> NestableCollectExpression.objToBytesRef(PGType::typName))
+                () -> NestableCollectExpression.forFunction(PGType::typName))
             .put(Columns.TYPDELIM,
-                () -> NestableCollectExpression.objToBytesRef(PGType::typDelim))
+                () -> NestableCollectExpression.forFunction(PGType::typDelim))
             .put(Columns.TYPELEM,
                 () -> NestableCollectExpression.forFunction(PGType::typElem))
             .put(Columns.TYPTYPE,

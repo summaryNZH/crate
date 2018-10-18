@@ -71,21 +71,21 @@ public class SysAllocationsTableInfo extends StaticTableInfo {
     public static Map<ColumnIdent, RowCollectExpressionFactory<SysAllocation>> expressions() {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<SysAllocation>>builder()
             .put(Columns.TABLE_SCHEMA,
-                () -> NestableCollectExpression.objToBytesRef(SysAllocation::tableSchema))
+                () -> NestableCollectExpression.forFunction(SysAllocation::tableSchema))
             .put(Columns.TABLE_NAME,
-                () -> NestableCollectExpression.objToBytesRef(SysAllocation::tableName))
+                () -> NestableCollectExpression.forFunction(SysAllocation::tableName))
             .put(Columns.PARTITION_IDENT,
-                () -> NestableCollectExpression.objToBytesRef(SysAllocation::partitionIdent))
+                () -> NestableCollectExpression.forFunction(SysAllocation::partitionIdent))
             .put(Columns.SHARD_ID,
                 () -> NestableCollectExpression.forFunction(SysAllocation::shardId))
             .put(Columns.NODE_ID,
-                () -> NestableCollectExpression.objToBytesRef(SysAllocation::nodeId))
+                () -> NestableCollectExpression.forFunction(SysAllocation::nodeId))
             .put(Columns.PRIMARY,
                 () -> NestableCollectExpression.forFunction(SysAllocation::primary))
             .put(Columns.CURRENT_STATE,
-                () -> NestableCollectExpression.objToBytesRef(SysAllocation::currentState))
+                () -> NestableCollectExpression.forFunction(SysAllocation::currentState))
             .put(Columns.EXPLANATION,
-                () -> NestableCollectExpression.objToBytesRef(SysAllocation::explanation))
+                () -> NestableCollectExpression.forFunction(SysAllocation::explanation))
             .put(Columns.DECISIONS,
                 () -> new SysAllocationDecisionsExpression<Map<String, Object>>() {
 

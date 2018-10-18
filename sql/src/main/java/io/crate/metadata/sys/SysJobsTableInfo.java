@@ -60,11 +60,11 @@ public class SysJobsTableInfo extends StaticTableInfo {
     public static ImmutableMap<ColumnIdent, RowCollectExpressionFactory<JobContext>> expressions(Supplier<DiscoveryNode> localNode) {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<JobContext>>builder()
             .put(SysJobsTableInfo.Columns.ID,
-                () -> NestableCollectExpression.objToBytesRef(JobContext::id))
+                () -> NestableCollectExpression.forFunction(JobContext::id))
             .put(SysJobsTableInfo.Columns.USERNAME,
-                () -> NestableCollectExpression.objToBytesRef(JobContext::username))
+                () -> NestableCollectExpression.forFunction(JobContext::username))
             .put(SysJobsTableInfo.Columns.STMT,
-                () -> NestableCollectExpression.objToBytesRef(JobContext::stmt))
+                () -> NestableCollectExpression.forFunction(JobContext::stmt))
             .put(SysJobsTableInfo.Columns.STARTED,
                 () -> NestableCollectExpression.forFunction(JobContext::started))
             .put(Columns.NODE, () -> NestableCollectExpression.forFunction(ignored -> ImmutableMap.of(

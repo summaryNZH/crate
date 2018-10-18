@@ -89,7 +89,7 @@ public class PgClassTable extends StaticTableInfo {
     public static Map<ColumnIdent, RowCollectExpressionFactory<RelationInfo>> expressions() {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<RelationInfo>>builder()
             .put(Columns.OID, () -> NestableCollectExpression.forFunction(OidHash::relationOid))
-            .put(Columns.RELNAME, () -> NestableCollectExpression.objToBytesRef(r -> new BytesRef(r.ident().name())))
+            .put(Columns.RELNAME, () -> NestableCollectExpression.forFunction(r -> new BytesRef(r.ident().name())))
             .put(Columns.RELNAMESPACE, () -> NestableCollectExpression.forFunction(r -> schemaOid(r.ident().schema())))
             .put(Columns.RELTYPE, () -> NestableCollectExpression.constant(0))
             .put(Columns.RELOFTYPE, () -> NestableCollectExpression.constant(0))
@@ -105,7 +105,7 @@ public class PgClassTable extends StaticTableInfo {
             .put(Columns.RELHASINDEX, () -> NestableCollectExpression.constant(false))
             .put(Columns.RELISSHARED, () -> NestableCollectExpression.constant(false))
             .put(Columns.RELPERSISTENCE, () -> NestableCollectExpression.constant(PERSISTENCE_PERMANENT))
-            .put(Columns.RELKIND, () -> NestableCollectExpression.objToBytesRef(
+            .put(Columns.RELKIND, () -> NestableCollectExpression.forFunction(
                 r -> r.relationType() == RelationType.VIEW ? KIND_VIEW : KIND_TABLE))
             .put(Columns.RELNATTS, () -> NestableCollectExpression.forFunction(r -> (short) r.columns().size()))
             .put(Columns.RELCHECKS, () -> NestableCollectExpression.constant((short) 0))

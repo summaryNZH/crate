@@ -242,13 +242,13 @@ public class SysNodesTableInfo extends StaticTableInfo {
     public static Map<ColumnIdent, RowCollectExpressionFactory<NodeStatsContext>> expressions() {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<NodeStatsContext>>builder()
             .put(Columns.ID,
-                () -> NestableCollectExpression.objToBytesRef(NodeStatsContext::id))
+                () -> NestableCollectExpression.forFunction(NodeStatsContext::id))
             .put(Columns.NAME,
-                () -> NestableCollectExpression.objToBytesRef(NodeStatsContext::name))
+                () -> NestableCollectExpression.forFunction(NodeStatsContext::name))
             .put(Columns.HOSTNAME,
-                () -> NestableCollectExpression.objToBytesRef(r -> r.isComplete() ? r.hostname() : null))
+                () -> NestableCollectExpression.forFunction(r -> r.isComplete() ? r.hostname() : null))
             .put(Columns.REST_URL,
-                () -> NestableCollectExpression.objToBytesRef(r -> r.isComplete() ? r.restUrl() : null))
+                () -> NestableCollectExpression.forFunction(r -> r.isComplete() ? r.restUrl() : null))
             .put(Columns.PORT, NodePortStatsExpression::new)
             .put(Columns.LOAD, NodeLoadStatsExpression::new)
             .put(Columns.MEM, NodeMemoryStatsExpression::new)

@@ -67,18 +67,18 @@ public class InformationViewsTableInfo extends InformationTableInfo {
     public static Map<ColumnIdent, RowCollectExpressionFactory<ViewInfo>> expressions() {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<ViewInfo>>builder()
             .put(Columns.TABLE_CATALOG,
-                () -> NestableCollectExpression.objToBytesRef(r -> r.ident().schema()))
+                () -> NestableCollectExpression.forFunction(r -> r.ident().schema()))
             .put(Columns.TABLE_SCHEMA,
-                () -> NestableCollectExpression.objToBytesRef(r -> r.ident().schema()))
+                () -> NestableCollectExpression.forFunction(r -> r.ident().schema()))
             .put(Columns.TABLE_NAME,
-                () -> NestableCollectExpression.objToBytesRef(r -> r.ident().name()))
+                () -> NestableCollectExpression.forFunction(r -> r.ident().name()))
             .put(Columns.VIEW_DEFINITION,
-                () -> NestableCollectExpression.objToBytesRef(ViewInfo::definition))
+                () -> NestableCollectExpression.forFunction(ViewInfo::definition))
             .put(Columns.CHECK_OPTION,
                 () -> NestableCollectExpression.forFunction(r -> CHECK_OPTION_NONE))
             .put(Columns.IS_UPDATABLE,
                 () -> NestableCollectExpression.forFunction(r -> false))
-            .put(Columns.OWNER, () -> NestableCollectExpression.objToBytesRef(ViewInfo::owner))
+            .put(Columns.OWNER, () -> NestableCollectExpression.forFunction(ViewInfo::owner))
             .build();
     }
 

@@ -62,9 +62,9 @@ public class SysSnapshotsTableInfo extends StaticTableInfo {
     public static ImmutableMap<ColumnIdent, RowCollectExpressionFactory<SysSnapshot>> expressions() {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<SysSnapshot>>builder()
             .put(SysSnapshotsTableInfo.Columns.NAME,
-                () -> NestableCollectExpression.objToBytesRef(SysSnapshot::name))
+                () -> NestableCollectExpression.forFunction(SysSnapshot::name))
             .put(SysSnapshotsTableInfo.Columns.REPOSITORY,
-                () -> NestableCollectExpression.objToBytesRef(SysSnapshot::repository))
+                () -> NestableCollectExpression.forFunction(SysSnapshot::repository))
             .put(SysSnapshotsTableInfo.Columns.CONCRETE_INDICES,
                 () -> NestableCollectExpression.forFunction((SysSnapshot s) -> {
                     List<String> concreteIndices = s.concreteIndices();
@@ -79,9 +79,9 @@ public class SysSnapshotsTableInfo extends StaticTableInfo {
             .put(SysSnapshotsTableInfo.Columns.FINISHED,
                 () -> NestableCollectExpression.forFunction(SysSnapshot::finished))
             .put(SysSnapshotsTableInfo.Columns.VERSION,
-                () -> NestableCollectExpression.objToBytesRef(SysSnapshot::version))
+                () -> NestableCollectExpression.forFunction(SysSnapshot::version))
             .put(SysSnapshotsTableInfo.Columns.STATE,
-                () -> NestableCollectExpression.objToBytesRef(SysSnapshot::state))
+                () -> NestableCollectExpression.forFunction(SysSnapshot::state))
             .build();
     }
 

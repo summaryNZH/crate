@@ -65,23 +65,23 @@ public class InformationReferentialConstraintsTableInfo extends InformationTable
     public static ImmutableMap<ColumnIdent, RowCollectExpressionFactory<Void>> expressions() {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<Void>>builder()
             .put(Columns.CONSTRAINT_CATALOG,
-                () -> NestableCollectExpression.objToBytesRef(r -> null))
+                () -> NestableCollectExpression.forFunction(r -> null))
             .put(Columns.CONSTRAINT_SCHEMA,
-                () -> NestableCollectExpression.objToBytesRef(r -> null))
+                () -> NestableCollectExpression.forFunction(r -> null))
             .put(Columns.CONSTRAINT_NAME,
-                () -> NestableCollectExpression.objToBytesRef(r -> null))
+                () -> NestableCollectExpression.forFunction(r -> null))
             .put(Columns.UNIQUE_CONSTRAINT_CATALOG,
-                () -> NestableCollectExpression.objToBytesRef(r -> null))
+                () -> NestableCollectExpression.forFunction(r -> null))
             .put(Columns.UNIQUE_CONSTRAINT_SCHEMA,
-                () -> NestableCollectExpression.objToBytesRef(r -> null))
+                () -> NestableCollectExpression.forFunction(r -> null))
             .put(Columns.UNIQUE_CONSTRAINT_NAME,
-                () -> NestableCollectExpression.objToBytesRef(r -> null))
+                () -> NestableCollectExpression.forFunction(r -> null))
             .put(Columns.MATCH_OPTION,
-                () -> NestableCollectExpression.objToBytesRef(r -> null))
+                () -> NestableCollectExpression.forFunction(r -> null))
             .put(Columns.UPDATE_RULE,
-                () -> NestableCollectExpression.objToBytesRef(r -> null))
+                () -> NestableCollectExpression.forFunction(r -> null))
             .put(Columns.DELETE_RULE,
-                () -> NestableCollectExpression.objToBytesRef(r -> null))
+                () -> NestableCollectExpression.forFunction(r -> null))
             .build();
     }
 

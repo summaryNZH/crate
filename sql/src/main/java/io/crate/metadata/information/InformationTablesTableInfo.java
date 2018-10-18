@@ -185,13 +185,13 @@ public class InformationTablesTableInfo extends InformationTableInfo {
     public static Map<ColumnIdent, RowCollectExpressionFactory<RelationInfo>> expressions() {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<RelationInfo>>builder()
             .put(InformationTablesTableInfo.Columns.TABLE_SCHEMA,
-                () -> NestableCollectExpression.objToBytesRef(r -> r.ident().schema()))
+                () -> NestableCollectExpression.forFunction(r -> r.ident().schema()))
             .put(InformationTablesTableInfo.Columns.TABLE_NAME,
-                () -> NestableCollectExpression.objToBytesRef(r -> r.ident().name()))
+                () -> NestableCollectExpression.forFunction(r -> r.ident().name()))
             .put(InformationTablesTableInfo.Columns.TABLE_CATALOG,
-                () -> NestableCollectExpression.objToBytesRef(r -> r.ident().schema()))
+                () -> NestableCollectExpression.forFunction(r -> r.ident().schema()))
             .put(InformationTablesTableInfo.Columns.TABLE_TYPE,
-                () -> NestableCollectExpression.objToBytesRef(r -> r.relationType().pretty()))
+                () -> NestableCollectExpression.forFunction(r -> r.relationType().pretty()))
             .put(InformationTablesTableInfo.Columns.NUMBER_OF_SHARDS,
                 () -> NestableCollectExpression.forFunction(row -> {
                     if (row instanceof ShardedTable) {
@@ -200,14 +200,14 @@ public class InformationTablesTableInfo extends InformationTableInfo {
                     return null;
                 }))
             .put(InformationTablesTableInfo.Columns.NUMBER_OF_REPLICAS,
-                () -> NestableCollectExpression.objToBytesRef(row -> {
+                () -> NestableCollectExpression.forFunction(row -> {
                     if (row instanceof ShardedTable) {
                         return ((ShardedTable) row).numberOfReplicas();
                     }
                     return null;
                 }))
             .put(InformationTablesTableInfo.Columns.CLUSTERED_BY,
-                () -> NestableCollectExpression.objToBytesRef(row -> {
+                () -> NestableCollectExpression.forFunction(row -> {
                     if (row instanceof ShardedTable) {
                         ColumnIdent clusteredBy = ((ShardedTable) row).clusteredBy();
                         if (clusteredBy == null) {
@@ -234,7 +234,7 @@ public class InformationTablesTableInfo extends InformationTableInfo {
                     return null;
                 }))
             .put(InformationTablesTableInfo.Columns.COLUMN_POLICY,
-                () -> NestableCollectExpression.objToBytesRef(row -> {
+                () -> NestableCollectExpression.forFunction(row -> {
                     if (row instanceof DocTableInfo) {
                         return ((DocTableInfo) row).columnPolicy().value();
                     }
@@ -248,7 +248,7 @@ public class InformationTablesTableInfo extends InformationTableInfo {
                     return null;
                 }))
             .put(InformationTablesTableInfo.Columns.ROUTING_HASH_FUNCTION,
-                () -> NestableCollectExpression.objToBytesRef(row -> {
+                () -> NestableCollectExpression.forFunction(row -> {
                     if (row instanceof ShardedTable) {
                         return IndexMappings.DEFAULT_ROUTING_HASH_FUNCTION_PRETTY_NAME;
                     }
@@ -262,14 +262,14 @@ public class InformationTablesTableInfo extends InformationTableInfo {
                     return null;
                 }))
             .put(InformationTablesTableInfo.Columns.SELF_REFERENCING_COLUMN_NAME,
-                () -> NestableCollectExpression.objToBytesRef(row -> {
+                () -> NestableCollectExpression.forFunction(row -> {
                     if (row instanceof ShardedTable) {
                         return SELF_REFERENCING_COLUMN_NAME;
                     }
                     return null;
                 }))
             .put(InformationTablesTableInfo.Columns.REFERENCE_GENERATION,
-                () -> NestableCollectExpression.objToBytesRef(r -> REFERENCE_GENERATION))
+                () -> NestableCollectExpression.forFunction(r -> REFERENCE_GENERATION))
             .put(InformationTablesTableInfo.Columns.TABLE_VERSION, TablesVersionExpression::new)
             .put(InformationTablesTableInfo.Columns.TABLE_SETTINGS, TablesSettingsExpression::new
             ).build();

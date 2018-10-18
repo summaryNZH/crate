@@ -58,7 +58,7 @@ public class PgNamespaceTable extends StaticTableInfo {
     public static Map<ColumnIdent, RowCollectExpressionFactory<SchemaInfo>> expressions() {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<SchemaInfo>>builder()
             .put(Columns.OID, () -> NestableCollectExpression.forFunction(s -> schemaOid(s.name())))
-            .put(Columns.NSPNAME, () -> NestableCollectExpression.objToBytesRef(s -> new BytesRef(s.name())))
+            .put(Columns.NSPNAME, () -> NestableCollectExpression.forFunction(s -> new BytesRef(s.name())))
             .put(Columns.NSPOWNER, () -> NestableCollectExpression.constant(0))
             .put(Columns.NSPACL, () -> NestableCollectExpression.constant(null))
             .build();
