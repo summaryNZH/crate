@@ -132,8 +132,8 @@ class ToMatchQuery implements FunctionToQuery {
     private static Query stringMatch(LuceneQueryBuilder.Context context, List<Symbol> arguments, Object queryTerm) throws IOException {
         @SuppressWarnings("unchecked")
         Map<String, Object> fields = (Map) ((Literal) arguments.get(0)).value();
-        BytesRef queryString = (BytesRef) queryTerm;
-        BytesRef matchType = (BytesRef) ((Literal) arguments.get(2)).value();
+        String queryString = (String) queryTerm;
+        String matchType = (String) ((Literal) arguments.get(2)).value();
         //noinspection unchecked
         Map<String, Object> options = (Map<String, Object>) ((Literal) arguments.get(3)).value();
 
@@ -159,7 +159,7 @@ class ToMatchQuery implements FunctionToQuery {
                 context.queryShardContext,
                 matchType,
                 (Map<String, Float>) (Map) fields,
-                queryString.utf8ToString(),
+                queryString,
                 options
             );
         }
@@ -167,8 +167,8 @@ class ToMatchQuery implements FunctionToQuery {
 
     private static Query singleMatchQuery(QueryShardContext queryShardContext,
                                           Map.Entry<String, Object> entry,
-                                          BytesRef queryString,
-                                          BytesRef matchType,
+                                          String queryString,
+                                          String matchType,
                                           Map<String, Object> options) throws IOException {
         Query query = MatchQueries.singleMatch(
             queryShardContext,

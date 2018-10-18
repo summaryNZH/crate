@@ -113,7 +113,7 @@ public class TableHealthServiceTest extends CrateDummyClusterServiceUnitTest {
             relationName,
             ".blob_my_blob_table",
             2,
-            new BytesRef(1),
+            "1",
             null,
             null,
             null,

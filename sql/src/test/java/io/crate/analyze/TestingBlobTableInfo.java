@@ -25,9 +25,9 @@ package io.crate.analyze;
 import com.google.common.collect.ImmutableMap;
 import io.crate.Version;
 import io.crate.action.sql.SessionContext;
+import io.crate.metadata.RelationName;
 import io.crate.metadata.Routing;
 import io.crate.metadata.RoutingProvider;
-import io.crate.metadata.RelationName;
 import io.crate.metadata.blob.BlobTableInfo;
 import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.cluster.ClusterState;
@@ -39,7 +39,7 @@ class TestingBlobTableInfo extends BlobTableInfo {
     TestingBlobTableInfo(RelationName ident,
                          String index,
                          int numberOfShards,
-                         BytesRef numberOfReplicas,
+                         String numberOfReplicas,
                          ImmutableMap<String, Object> tableParameters,
                          BytesRef blobsPath,
                          Routing routing) {

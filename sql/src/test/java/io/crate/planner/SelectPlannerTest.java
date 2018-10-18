@@ -65,7 +65,6 @@ import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
 import io.crate.testing.SQLExecutor;
 import io.crate.testing.T3;
 import io.crate.types.DataTypes;
-import org.apache.lucene.util.BytesRef;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -124,8 +123,8 @@ public class SelectPlannerTest extends CrateDummyClusterServiceUnitTest {
                 "   date timestamp," +
                 "   obj object" +
                 ") partitioned by (date) ",
-                new PartitionName(new RelationName("doc", "parted"), singletonList(new BytesRef("1395874800000"))).asIndexName(),
-                new PartitionName(new RelationName("doc", "parted"), singletonList(new BytesRef("1395961200000"))).asIndexName(),
+                new PartitionName(new RelationName("doc", "parted"), singletonList("1395874800000")).asIndexName(),
+                new PartitionName(new RelationName("doc", "parted"), singletonList("1395961200000")).asIndexName(),
                 new PartitionName(new RelationName("doc", "parted"), singletonList(null)).asIndexName()
             )
             .build();
@@ -315,7 +314,7 @@ public class SelectPlannerTest extends CrateDummyClusterServiceUnitTest {
             indices.addAll(entry.getValue().keySet());
         }
         assertThat(indices, Matchers.contains(
-            new PartitionName(new RelationName("doc", "parted"), Arrays.asList(new BytesRef("123"))).asIndexName()));
+            new PartitionName(new RelationName("doc", "parted"), Arrays.asList("123")).asIndexName()));
 
         assertThat(collectPhase.where().representation(), is("Ref{doc.parted_pks.name, string} = 'x'"));
 

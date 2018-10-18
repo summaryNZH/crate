@@ -30,7 +30,6 @@ import io.crate.metadata.doc.PartitionedByMappingExtractor;
 import io.crate.types.DataType;
 import io.crate.types.DataTypes;
 import org.apache.logging.log4j.Logger;
-import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.cluster.service.ClusterService;
@@ -70,7 +69,7 @@ public class PartitionInfos implements Iterable<PartitionInfo> {
             MappingMetaData mappingMetaData = indexMetaData.mapping(Constants.DEFAULT_MAPPING_TYPE);
             Map<String, Object> mappingMap = mappingMetaData.sourceAsMap();
             Map<String, Object> valuesMap = buildValuesMap(partitionName, mappingMetaData);
-            BytesRef numberOfReplicas = NumberOfReplicas.fromSettings(indexMetaData.getSettings());
+            String numberOfReplicas = NumberOfReplicas.fromSettings(indexMetaData.getSettings());
             return new PartitionInfo(
                 partitionName,
                 indexMetaData.getNumberOfShards(),

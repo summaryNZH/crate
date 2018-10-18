@@ -39,7 +39,7 @@ public class BlobTableInfoTest extends CrateUnitTest {
         new RelationName("blob", "dummy"),
         ".blob_dummy",
         5,
-        new BytesRef("0"),
+        "0",
         ImmutableMap.of(),
         new BytesRef("/tmp/blobs_path"),
         Version.CURRENT,

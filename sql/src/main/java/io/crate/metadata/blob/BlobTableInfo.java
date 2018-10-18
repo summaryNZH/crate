@@ -58,7 +58,7 @@ public class BlobTableInfo implements TableInfo, ShardedTable, StoredTable {
 
     private final RelationName ident;
     private final int numberOfShards;
-    private final BytesRef numberOfReplicas;
+    private final String numberOfReplicas;
     private final String index;
     private final LinkedHashSet<Reference> columns = new LinkedHashSet<>();
     private final BytesRef blobsPath;
@@ -79,7 +79,7 @@ public class BlobTableInfo implements TableInfo, ShardedTable, StoredTable {
     public BlobTableInfo(RelationName ident,
                          String index,
                          int numberOfShards,
-                         BytesRef numberOfReplicas,
+                         String numberOfReplicas,
                          Map<String, Object> tableParameters,
                          BytesRef blobsPath,
                          @Nullable Version versionCreated,
@@ -141,7 +141,7 @@ public class BlobTableInfo implements TableInfo, ShardedTable, StoredTable {
     }
 
     @Override
-    public BytesRef numberOfReplicas() {
+    public String numberOfReplicas() {
         return numberOfReplicas;
     }
 

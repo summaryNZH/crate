@@ -32,7 +32,6 @@ import io.crate.planner.ExplainLeaf;
 import io.crate.planner.operators.SubQueryResults;
 import io.crate.types.DataTypes;
 import io.crate.types.LongType;
-import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.lucene.BytesRefs;
 
 import javax.annotation.Nullable;
@@ -80,13 +79,13 @@ public class DocKeys implements Iterable<DocKeys.DocKey> {
             return key;
         }
 
-        public List<BytesRef> getPartitionValues(Functions functions, Row params, SubQueryResults subQueryResults) {
+        public List<String> getPartitionValues(Functions functions, Row params, SubQueryResults subQueryResults) {
             if (partitionIdx == null || partitionIdx.isEmpty()) {
                 return Collections.emptyList();
             }
             return Lists.transform(
                 partitionIdx,
-                pIdx -> new BytesRef(DataTypes.STRING.value(SymbolEvaluator.evaluate(functions, key.get(pIdx), params, subQueryResults))));
+                pIdx -> DataTypes.STRING.value(SymbolEvaluator.evaluate(functions, key.get(pIdx), params, subQueryResults)));
 
         }
 

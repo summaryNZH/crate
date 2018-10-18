@@ -22,13 +22,13 @@
 package io.crate.analyze;
 
 import io.crate.exceptions.OperationOnInaccessibleRelationException;
-import io.crate.execution.dsl.phases.FileUriCollectPhase;
-import io.crate.expression.symbol.Literal;
 import io.crate.exceptions.PartitionUnknownException;
 import io.crate.exceptions.RelationUnknown;
 import io.crate.exceptions.SchemaUnknownException;
 import io.crate.exceptions.UnsupportedFeatureException;
+import io.crate.execution.dsl.phases.FileUriCollectPhase;
 import io.crate.execution.dsl.projection.WriterProjection;
+import io.crate.expression.symbol.Literal;
 import io.crate.metadata.PartitionName;
 import io.crate.metadata.RelationName;
 import io.crate.metadata.table.TableInfo;
@@ -88,7 +88,7 @@ public class CopyAnalyzerTest extends CrateDummyClusterServiceUnitTest {
         CopyFromAnalyzedStatement analysis = e.analyze(
             "copy parted partition (date=1395874800000) from '/some/distant/file.ext'");
         String parted = new PartitionName(
-            new RelationName("doc", "parted"), Collections.singletonList(new BytesRef("1395874800000"))).ident();
+            new RelationName("doc", "parted"), Collections.singletonList("1395874800000")).ident();
         assertThat(analysis.partitionIdent(), equalTo(parted));
     }
 
@@ -199,7 +199,7 @@ public class CopyAnalyzerTest extends CrateDummyClusterServiceUnitTest {
     public void testCopyToFileWithPartitionClause() throws Exception {
         CopyToAnalyzedStatement analysis = e.analyze("copy parted partition (date=1395874800000) to directory '/blah'");
         String parted = new PartitionName(
-            new RelationName("doc", "parted"), Collections.singletonList(new BytesRef("1395874800000"))).asIndexName();
+            new RelationName("doc", "parted"), Collections.singletonList("1395874800000")).asIndexName();
         QuerySpec querySpec = analysis.subQueryRelation().querySpec();
         assertThat(querySpec.where().partitions(), contains(parted));
     }
@@ -208,7 +208,7 @@ public class CopyAnalyzerTest extends CrateDummyClusterServiceUnitTest {
     public void testCopyToDirectoryWithPartitionClause() throws Exception {
         CopyToAnalyzedStatement analysis = e.analyze("copy parted partition (date=1395874800000) to directory '/tmp'");
         String parted = new PartitionName(
-            new RelationName("doc", "parted"), Collections.singletonList(new BytesRef("1395874800000"))).asIndexName();
+            new RelationName("doc", "parted"), Collections.singletonList("1395874800000")).asIndexName();
         QuerySpec querySpec = analysis.subQueryRelation().querySpec();
         assertThat(querySpec.where().partitions(), contains(parted));
         assertThat(analysis.overwrites().size(), is(0));
@@ -233,7 +233,7 @@ public class CopyAnalyzerTest extends CrateDummyClusterServiceUnitTest {
         CopyToAnalyzedStatement analysis = e.analyze(
             "copy parted partition (date=1395874800000) where date = 1395874800000 to directory '/tmp/foo'");
         String parted = new PartitionName(
-            new RelationName("doc", "parted"), Collections.singletonList(new BytesRef("1395874800000"))).asIndexName();
+            new RelationName("doc", "parted"), Collections.singletonList("1395874800000")).asIndexName();
         QuerySpec querySpec = analysis.subQueryRelation().querySpec();
         assertThat(querySpec.where().partitions(), contains(parted));
     }
@@ -244,7 +244,7 @@ public class CopyAnalyzerTest extends CrateDummyClusterServiceUnitTest {
         CopyToAnalyzedStatement analysis = e.analyze(
             "copy parted partition (date=1395874800000) where id = 1 to directory '/tmp/foo'");
         String parted = new PartitionName(
-            new RelationName("doc", "parted"), Collections.singletonList(new BytesRef("1395874800000"))).asIndexName();
+            new RelationName("doc", "parted"), Collections.singletonList("1395874800000")).asIndexName();
         QuerySpec querySpec = analysis.subQueryRelation().querySpec();
         assertThat(querySpec.where().partitions(), contains(parted));
         assertThat(querySpec.where().query(), isFunction("op_="));

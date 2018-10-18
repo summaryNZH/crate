@@ -30,8 +30,7 @@ import io.crate.data.Input;
 import io.crate.metadata.IndexParts;
 import io.crate.metadata.PartitionName;
 import io.crate.metadata.RelationName;
-import io.crate.expression.Inputs;
-import org.apache.lucene.util.BytesRef;
+import io.crate.types.DataTypes;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -65,18 +64,18 @@ public class IndexNameResolver {
 
     private static Supplier<String> forPartition(final RelationName relationName, final List<Input<?>> partitionedByInputs) {
         assert partitionedByInputs.size() > 0 : "must have at least 1 partitionedByInput";
-        final LoadingCache<List<BytesRef>, String> cache = CacheBuilder.newBuilder()
+        final LoadingCache<List<String>, String> cache = CacheBuilder.newBuilder()
             .initialCapacity(10)
             .maximumSize(20)
-            .build(new CacheLoader<List<BytesRef>, String>() {
+            .build(new CacheLoader<List<String>, String>() {
                 @Override
-                public String load(@Nonnull List<BytesRef> key) throws Exception {
+                public String load(@Nonnull List<String> key) {
                     return IndexParts.toIndexName(relationName, PartitionName.encodeIdent(key));
                 }
             });
         return () -> {
             // copy because the values of the inputs are mutable
-            List<BytesRef> partitions = Lists2.map(partitionedByInputs, Inputs.TO_BYTES_REF);
+            List<String> partitions = Lists2.map(partitionedByInputs, input -> DataTypes.STRING.value(input.value()));
             return cache.getUnchecked(partitions);
         };
     }
