@@ -43,7 +43,6 @@ import org.elasticsearch.common.lucene.BytesRefs;
 import java.util.List;
 
 import static io.crate.execution.engine.collect.NestableCollectExpression.forFunction;
-import static io.crate.execution.engine.collect.NestableCollectExpression.objToBytesRef;
 import static io.crate.execution.engine.collect.NestableCollectExpression.withNullableProperty;
 
 public class SysJobsLogTableInfo extends StaticTableInfo {
@@ -67,12 +66,12 @@ public class SysJobsLogTableInfo extends StaticTableInfo {
 
     public static ImmutableMap<ColumnIdent, RowCollectExpressionFactory<JobContextLog>> expressions() {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<JobContextLog>>builder()
-            .put(SysJobsLogTableInfo.Columns.ID, () -> objToBytesRef(JobContextLog::id))
-            .put(SysJobsTableInfo.Columns.USERNAME, () -> objToBytesRef(JobContextLog::username))
-            .put(SysJobsLogTableInfo.Columns.STMT, () -> objToBytesRef(JobContextLog::statement))
+            .put(SysJobsLogTableInfo.Columns.ID, () -> forFunction(JobContextLog::id))
+            .put(SysJobsTableInfo.Columns.USERNAME, () -> forFunction(JobContextLog::username))
+            .put(SysJobsLogTableInfo.Columns.STMT, () -> forFunction(JobContextLog::statement))
             .put(SysJobsLogTableInfo.Columns.STARTED, () -> forFunction(JobContextLog::started))
             .put(SysJobsLogTableInfo.Columns.ENDED, () -> forFunction(JobContextLog::ended))
-            .put(SysJobsLogTableInfo.Columns.ERROR, () -> objToBytesRef(JobContextLog::errorMessage))
+            .put(SysJobsLogTableInfo.Columns.ERROR, () -> forFunction(JobContextLog::errorMessage))
             .put(Columns.CLASS, () -> withNullableProperty(JobContextLog::classification, c -> ImmutableMap.builder()
                 .put("type", new BytesRef(c.type().name()))
                 .put("labels", c.labels()
