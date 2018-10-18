@@ -97,7 +97,7 @@ public class PartitionPropertiesAnalyzer {
 
         int idx = 0;
         for (Object o : properties.values()) {
-            values[idx++] = (String) o;
+            values[idx++] = DataTypes.STRING.value(o);
         }
         return new PartitionName(relationName, Arrays.asList(values));
     }

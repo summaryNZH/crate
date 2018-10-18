@@ -80,7 +80,7 @@ class MatchPrinter {
     private static void printMethod(Symbol method, StringBuilder sb) {
         // third argument (method)
         // need to print as identifier without quotes
-        sb.append(((BytesRef) ((Literal) method).value()).utf8ToString());
+        sb.append((String) ((Literal) method).value());
     }
 
     private static void printProperties(Symbol propSymbol, StringBuilder sb) {

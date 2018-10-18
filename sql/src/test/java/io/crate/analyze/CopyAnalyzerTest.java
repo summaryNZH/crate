@@ -36,7 +36,6 @@ import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
 import io.crate.testing.SQLExecutor;
 import io.crate.types.ArrayType;
 import io.crate.types.DataTypes;
-import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.lucene.BytesRefs;
 import org.junit.Before;
 import org.junit.Test;
@@ -286,7 +285,7 @@ public class CopyAnalyzerTest extends CrateDummyClusterServiceUnitTest {
     public void testCopyFromFileUriArray() throws Exception {
         Object[] files = $("/f1.json", "/f2.json");
         CopyFromAnalyzedStatement copyFrom = e.analyze("copy users from ?", new Object[]{files});
-        assertThat(copyFrom.uri(), isLiteral($(new BytesRef("/f1.json"), new BytesRef("/f2.json")), new ArrayType(DataTypes.STRING)));
+        assertThat(copyFrom.uri(), isLiteral($("/f1.json", "/f2.json"), new ArrayType(DataTypes.STRING)));
     }
 
     @Test

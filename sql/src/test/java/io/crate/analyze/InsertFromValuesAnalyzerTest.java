@@ -452,8 +452,8 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
         Object[] arrayValue = (Object[]) analysis.sourceMaps().get(0)[0];
         assertThat(arrayValue.length, is(2));
         assertThat(arrayValue[0], instanceOf(Map.class));
-        assertThat((BytesRef) ((Map) arrayValue[0]).get("name"), is(new BytesRef("cool")));
-        assertThat((BytesRef) ((Map) arrayValue[1]).get("name"), is(new BytesRef("fancy")));
+        assertThat(((Map) arrayValue[0]).get("name"), is("cool"));
+        assertThat(((Map) arrayValue[1]).get("name"), is("fancy"));
         assertThat(Arrays.toString(((Object[]) ((Map) arrayValue[0]).get("metadata"))), is("[{id=0}, {id=1}]"));
         assertThat(Arrays.toString(((Object[]) ((Map) arrayValue[1]).get("metadata"))), is("[{id=2}, {id=3}]"));
     }
@@ -586,13 +586,13 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
         assertThat(analysis.sourceMaps().size(), is(3));
 
         assertThat((Integer) analysis.sourceMaps().get(0)[0], is(1));
-        assertThat((BytesRef) analysis.sourceMaps().get(0)[1], is(new BytesRef("Trillian")));
+        assertThat((BytesRef) analysis.sourceMaps().get(0)[1], is("Trillian"));
 
         assertThat((Integer) analysis.sourceMaps().get(1)[0], is(2));
-        assertThat((BytesRef) analysis.sourceMaps().get(1)[1], is(new BytesRef("Ford")));
+        assertThat((BytesRef) analysis.sourceMaps().get(1)[1], is("Ford"));
 
         assertThat((Integer) analysis.sourceMaps().get(2)[0], is(3));
-        assertThat((BytesRef) analysis.sourceMaps().get(2)[1], is(new BytesRef("Zaphod")));
+        assertThat((BytesRef) analysis.sourceMaps().get(2)[1], is("Zaphod"));
 
         assertThat(analysis.partitionMaps().size(), is(3));
         assertThat(analysis.partitionMaps().get(0),
@@ -706,7 +706,7 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
 
         assertThat(analysis.sourceMaps().size(), is(2));
         assertEquals(analysis.sourceMaps().get(0)[1], null);
-        assertEquals(analysis.sourceMaps().get(1)[1], new BytesRef("foo"));
+        assertEquals(analysis.sourceMaps().get(1)[1], "foo");
     }
 
     @Test
@@ -837,9 +837,9 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
                                                              "values (1, 'Marx', [['string1', 'string2']])");
         assertThat(analysis.sourceMaps().size(), is(1));
         assertThat((Long) analysis.sourceMaps().get(0)[0], is(1L));
-        assertThat((BytesRef) analysis.sourceMaps().get(0)[1], is(new BytesRef("Marx")));
+        assertThat(analysis.sourceMaps().get(0)[1], is("Marx"));
         assertThat((Object[]) ((Object[]) analysis.sourceMaps().get(0)[2])[0],
-            arrayContaining(new Object[]{new BytesRef("string1"), new BytesRef("string2")}));
+            arrayContaining(new Object[]{"string1", "string2"}));
     }
 
     @Test
@@ -856,9 +856,9 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
                                                              "values (1, 'Marx', [['string1', 'string2']])");
         assertThat(analysis.sourceMaps().size(), is(1));
         assertThat((Long) analysis.sourceMaps().get(0)[0], is(1L));
-        assertThat((BytesRef) analysis.sourceMaps().get(0)[1], is(new BytesRef("Marx")));
+        assertThat((BytesRef) analysis.sourceMaps().get(0)[1], is("Marx"));
         assertThat((Object[]) ((Object[]) analysis.sourceMaps().get(0)[2])[0],
-            arrayContaining(new Object[]{new BytesRef("string1"), new BytesRef("string2")}));
+            arrayContaining(new Object[]{"string1", "string2"}));
     }
 
     @Test
@@ -1263,9 +1263,12 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
         assertThat(analysis.columns(), hasSize(4));
         assertThat(analysis.columns(), contains(isReference("ts"), isReference("user"), isReference("day"), isReference("name")));
         assertThat(analysis.sourceMaps(), hasSize(2));
+        assertThat(false, is(true));
+        /* TODO
         assertThat(analysis.sourceMaps(), contains(
-            Matchers.arrayContaining(0L, ImmutableMap.<String, Object>of("name", new BytesRef("Johnny")), 0L, new BytesRef("Johnnybar")),
-            Matchers.arrayContaining(626603400000L, ImmutableMap.<String, Object>of("name", new BytesRef("Egon")), 626572800000L, new BytesRef("Egonbar"))));
+            Matchers.arrayContaining(0L, ImmutableMap.<String, Object>of("name", "Johnny"), 0L, "Johnnybar"),
+            Matchers.arrayContaining(626603400000L, ImmutableMap.<String, Object>of("name", "Egon"), 626572800000L, "Egonbar")));
+            */
     }
 
     @Test

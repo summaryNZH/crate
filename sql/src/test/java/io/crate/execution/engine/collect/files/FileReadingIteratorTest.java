@@ -27,13 +27,13 @@ import io.crate.data.BatchIterator;
 import io.crate.data.Input;
 import io.crate.data.Row;
 import io.crate.execution.dsl.phases.FileUriCollectPhase;
+import io.crate.expression.InputFactory;
+import io.crate.expression.reference.file.FileLineReferenceResolver;
 import io.crate.metadata.FunctionIdent;
 import io.crate.metadata.FunctionImplementation;
 import io.crate.metadata.FunctionResolver;
 import io.crate.metadata.Functions;
 import io.crate.metadata.Reference;
-import io.crate.expression.InputFactory;
-import io.crate.expression.reference.file.FileLineReferenceResolver;
 import io.crate.test.integration.CrateUnitTest;
 import io.crate.testing.BatchIteratorTester;
 import io.crate.types.DataTypes;
@@ -91,8 +91,8 @@ public class FileReadingIteratorTest extends CrateUnitTest {
         );
 
         List<Object[]> expectedResult = Arrays.asList(
-            new Object[]{new BytesRef(JSON_AS_MAP_FIRST_LINE)},
-            new Object[]{new BytesRef(JSON_AS_MAP_SECOND_LINE)});
+            new Object[]{JSON_AS_MAP_FIRST_LINE},
+            new Object[]{JSON_AS_MAP_SECOND_LINE});
         BatchIteratorTester tester = new BatchIteratorTester(batchIteratorSupplier);
         tester.verifyResultAndEdgeCaseBehaviour(expectedResult);
     }
@@ -113,8 +113,8 @@ public class FileReadingIteratorTest extends CrateUnitTest {
         );
 
         List<Object[]> expectedResult = Arrays.asList(
-            new Object[]{new BytesRef(CSV_AS_MAP_FIRST_LINE)},
-            new Object[]{new BytesRef(CSV_AS_MAP_SECOND_LINE)});
+            new Object[]{CSV_AS_MAP_FIRST_LINE},
+            new Object[]{CSV_AS_MAP_SECOND_LINE});
         BatchIteratorTester tester = new BatchIteratorTester(batchIteratorSupplier);
         tester.verifyResultAndEdgeCaseBehaviour(expectedResult);
     }
@@ -134,8 +134,8 @@ public class FileReadingIteratorTest extends CrateUnitTest {
         );
 
         List<Object[]> expectedResult = Arrays.asList(
-            new Object[]{new BytesRef(JSON_AS_MAP_FIRST_LINE)},
-            new Object[]{new BytesRef(JSON_AS_MAP_SECOND_LINE)});
+            new Object[]{JSON_AS_MAP_FIRST_LINE},
+            new Object[]{JSON_AS_MAP_SECOND_LINE});
         BatchIteratorTester tester = new BatchIteratorTester(batchIteratorSupplier);
         tester.verifyResultAndEdgeCaseBehaviour(expectedResult);
     }
