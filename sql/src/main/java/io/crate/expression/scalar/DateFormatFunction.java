@@ -30,7 +30,6 @@ import io.crate.types.DataType;
 import io.crate.types.DataTypes;
 import io.crate.types.TimestampType;
 import org.apache.lucene.util.BytesRef;
-import org.elasticsearch.common.lucene.BytesRefs;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -96,7 +95,7 @@ public class DateFormatFunction extends Scalar<BytesRef, Object> {
             if (timezoneValue == null) {
                 return null;
             }
-            timezone = TimeZoneParser.parseTimeZone(BytesRefs.toBytesRef(timezoneValue));
+            timezone = TimeZoneParser.parseTimeZone((String) timezoneValue);
         }
         DateTime dateTime = new DateTime(timestamp, timezone);
         return TimestampFormatter.format(format, dateTime);

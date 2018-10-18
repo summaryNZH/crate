@@ -431,7 +431,9 @@ public class ShardCollectSource extends AbstractComponent implements CollectSour
                     // Prevent wrapping this to not break retry-detection
                     throw e;
                 } catch (Exception e) {
-                    throw new UnhandledServerException(e);
+                    UnhandledServerException unhandledServerException = new UnhandledServerException(e);
+                    unhandledServerException.setStackTrace(e.getStackTrace());
+                    throw unhandledServerException;
                 }
             }
         }

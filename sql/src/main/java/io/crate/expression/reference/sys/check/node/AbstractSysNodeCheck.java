@@ -72,7 +72,6 @@ public abstract class AbstractSysNodeCheck extends AbstractSysCheck implements S
     }
 
     private String generateId(String nodeId) {
-        //noinspection ConstantConditions
         return PK_FUNC.apply(ImmutableList.of(DataTypes.STRING.value(id()), nodeId));
     }
 

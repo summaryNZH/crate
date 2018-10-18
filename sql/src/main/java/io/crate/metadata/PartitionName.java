@@ -22,8 +22,8 @@
 package io.crate.metadata;
 
 import com.google.common.collect.ImmutableList;
-import io.crate.types.StringType;
 import org.apache.commons.codec.binary.Base32;
+import org.apache.lucene.util.UnicodeUtil;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
 import org.elasticsearch.common.io.stream.StreamInput;
@@ -31,6 +31,7 @@ import org.elasticsearch.common.io.stream.StreamInput;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -80,12 +81,47 @@ public class PartitionName {
             int size = in.readVInt();
             List<String> values = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
-                values.add(StringType.INSTANCE.streamer().readValueFrom(in));
+                values.add(readValueFrom(in));
             }
             return values;
         } catch (IOException e) {
             throw new IllegalArgumentException(
                 String.format(Locale.ENGLISH, "Invalid partition ident: %s", ident), e);
+        }
+    }
+
+    /**
+     * Read utf8 bytes for bwc, with 0 as `null` indicator
+     */
+    private static String readValueFrom(StreamInput in) throws IOException {
+        int length = in.readVInt() - 1;
+        if (length == -1) {
+            return null;
+        }
+        if (length == 0) {
+            return "";
+        }
+        byte[] bytes = new byte[length];
+        in.readBytes(bytes, 0, length);
+        char[] chars = new char[length];
+        int len = UnicodeUtil.UTF8toUTF16(bytes, 0, length, chars);
+        return new String(chars, 0, len);
+    }
+
+    /**
+     * Write utf8 bytes for bwc, with 0 as `null` indicator
+     */
+    private static void writeValueTo(BytesStreamOutput out, @Nullable String value) throws IOException {
+        // 1 is always added to the length so that
+        // 0 is null
+        // 1 is 0
+        // ...
+        if (value == null) {
+            out.writeVInt(0);
+        } else {
+            byte[] v = value.getBytes(StandardCharsets.UTF_8);
+            out.writeVInt(v.length + 1);
+            out.writeBytes(v, 0, v.length);
         }
     }
 
@@ -99,7 +135,7 @@ public class PartitionName {
         try {
             streamOutput.writeVInt(values.size());
             for (String value : values) {
-                StringType.INSTANCE.streamer().writeValueTo(streamOutput, value);
+                writeValueTo(streamOutput, value);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -113,6 +149,7 @@ public class PartitionName {
         }
         return identBase32;
     }
+
 
     /**
      * estimates the size the bytesRef values will take if written onto a StreamOutput using the String streamer
