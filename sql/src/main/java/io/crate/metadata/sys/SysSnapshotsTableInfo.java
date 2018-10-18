@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import io.crate.action.sql.SessionContext;
 import io.crate.analyze.WhereClause;
 import io.crate.execution.engine.collect.NestableCollectExpression;
+import io.crate.expression.reference.sys.snapshot.SysSnapshot;
 import io.crate.metadata.ColumnIdent;
 import io.crate.metadata.RelationName;
 import io.crate.metadata.Routing;
@@ -34,14 +35,9 @@ import io.crate.metadata.RowGranularity;
 import io.crate.metadata.expressions.RowCollectExpressionFactory;
 import io.crate.metadata.table.ColumnRegistrar;
 import io.crate.metadata.table.StaticTableInfo;
-import io.crate.expression.reference.sys.snapshot.SysSnapshot;
 import io.crate.types.ArrayType;
 import io.crate.types.DataTypes;
-import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.cluster.ClusterState;
-import org.elasticsearch.common.lucene.BytesRefs;
-
-import java.util.List;
 
 public class SysSnapshotsTableInfo extends StaticTableInfo {
 
@@ -67,12 +63,7 @@ public class SysSnapshotsTableInfo extends StaticTableInfo {
                 () -> NestableCollectExpression.forFunction(SysSnapshot::repository))
             .put(SysSnapshotsTableInfo.Columns.CONCRETE_INDICES,
                 () -> NestableCollectExpression.forFunction((SysSnapshot s) -> {
-                    List<String> concreteIndices = s.concreteIndices();
-                    BytesRef[] indices = new BytesRef[concreteIndices.size()];
-                    for (int i = 0; i < concreteIndices.size(); i++) {
-                        indices[i] = BytesRefs.toBytesRef(concreteIndices.get(i));
-                    }
-                    return indices;
+                    return s.concreteIndices().toArray(new String[0]);
                 }))
             .put(SysSnapshotsTableInfo.Columns.STARTED,
                 () -> NestableCollectExpression.forFunction(SysSnapshot::started))
