@@ -107,7 +107,7 @@ public class IndexWriterProjector implements Projector {
             false);
 
         //noinspection unchecked
-        Input<BytesRef> sourceUri = upsertResultContext.getSourceUriInput();
+        Input<String> sourceUri = upsertResultContext.getSourceUriInput();
 
         Function<String, ShardUpsertRequest.Item> itemFactory = id ->
             new ShardUpsertRequest.Item(id, null, new Object[]{source.value()}, null);
